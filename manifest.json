@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "Test",
+    "version": "1.0",
+    "description": "Add the reading time to Chrome Extension documentation articles",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://*.archiveofourown.org/*"
+            ], 
+            "js": [
+                "scripts/content.js"
+            ]
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "storage"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": "hello_extensions.png"
+    }
+}
