@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener(
     //     // let fics = document.getElementById("fics")
     //     // console.log(name)
     // // console.log(fics)
-    //     console.log('worked')
+        console.log('worked')
         console.log(request.action)
         console.log(sendResponse)
         console.log(sender.action)

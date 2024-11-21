@@ -35,13 +35,13 @@ window.addEventListener('load', function(){
     let li = document.createElement("li")
     let fics = document.getElementById("fics")
     console.log(chrome.storage.sync)
-    chrome.storage.session.get(['fics'], function (result) {
+    chrome.storage.sync.get(['fics'], function (result) {
         console.log(result.toString())
         console.log(result.fics)
-        result.fics.forEach(element => {
-            li.textContent = element
-            fics.appendChild(li)
-        });
+        // result.fics.forEach(element => {
+        //     li.textContent = element
+        //     fics.appendChild(li)
+        // });
     })
 })
 

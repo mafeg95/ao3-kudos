@@ -3,8 +3,8 @@ const kudosButton = document.getElementById("kudo_submit")
 console.log(kudosButton)
 kudosButton.addEventListener("click", () => {
     console.log("test")
-    let name = document.getElementsByClassName("title heading")[0].innerHTML.trim()
-    
+    // let name = document.getElementsByClassName("title heading")[0].innerHTML.trim()
+    let name = "test fic"
     chrome.runtime.sendMessage({ name: name })
 
     console.log('saving')
@@ -13,21 +13,25 @@ kudosButton.addEventListener("click", () => {
 
 function updateStorage(key, element) {
     objArray = []
-
-    chrome.storage.session.get(key, function (result) {
+    // if it's the first time -> set objArray to the element
+    chrome.storage.sync.get(key, function (result) {
         console.log("updateStorage")
         console.log(key)
+        console.log(result)
+
         if (result[key]) {
             console.log("inside if")
             console.log(result[key])
             objArray = result[key]
         }
+
         console.log("objArray")
         console.log(objArray)
+
         objArray.push(element)
         console.log("objArray 2")
-        console.log(key)
-        chrome.storage.session.set({ key: objArray }, function () {
+        console.log(key)          //fics [a,b,c]
+        chrome.storage.sync.set({ key: objArray }, function () {
             console.log('Updated myObjArray in storage');
         });
     })
@@ -48,7 +52,7 @@ document.getElementsByClassName("user navigation actions")[0].addEventListener('
     if (this.children[0].children[1].children[index].textContent !== "My Kudos") {
         this.children[0].children[1].appendChild(li)
         a.addEventListener('click', function () {
-            console.log("worked")
+            console.log("worked2 ")
             chrome.runtime.sendMessage({ action: "MyKudos" })
             // chrome.tabs.create({ 'url': chrome.extension.getURL('popup.html'), 'selected': true });
         })
