@@ -33,75 +33,79 @@
 window.addEventListener('load', function(){
 
     let fics = document.getElementById("fics")
-
-    chrome.storage.sync.get({ ficKeys2: 'fics'}, function (result) {
+    
+    chrome.storage.session.get(["ficKeys6"], function (result) { // not quite working
         console.log("storage")
         console.log(result)
-        let keys = Object.keys(result.ficKeys2)
-        console.log(result.ficKeys2)
+        let keys = Object.keys(result.ficKeys6)
+        console.log(result.ficKeys6)
         keys.forEach(fic => {
             console.log(fic)
-            let createdFic = createElementsFromArray(result.ficKeys2[fic])
+            let createdFic = createElementsFromArray(result.ficKeys6[fic])
             fics.appendChild(createdFic)
         });
     })
 })
 
 
-function createElementsFromArray(fic){
+function createElementsFromArray(fic){ // working - needs css
     
-    let mainDiv = document.createElement("div")
-    mainDiv.className = "fic-wrapper"
+    let mainDiv = document.createElement("li")
+    mainDiv.className = "fic-wrapper blurb"
 
     // Header components
     let header = document.createElement("div")
-    header.className = "fic-header"
+    header.className = "header module"
 
-    let mainHeader = document.createElement("div")
-    mainHeader.className = "name-and-author"
+    let mainHeader = document.createElement("h4")
+    mainHeader.className = "name-and-author heading"
+    
 
-    let ficName = document.createElement("a")
-    ficName.innerHTML = fic.ficName
-    ficName.href = fic.ficUrl
-    ficName.className = "fic-name"
-
-    let ficAuthor = document.createElement("div")
-    ficAuthor.innerHTML = fic.ficAuthor
-    ficAuthor.className = "fic-author"
-
-    mainHeader.appendChild(ficName)
+    let ficNameEl = document.createElement("a")
+    ficNameEl.textContent = fic.ficName
+    ficNameEl.href = fic.ficUrl
+    ficNameEl.className = "fic-name"
+    console.log(`${ficNameEl}`)
+    console.log(`${ficNameEl.innerHTML}`)
+    // let ficAuthor = document.createElement("a")
+    // ficAuthor.innerHTML = fic.ficAuthor
+    // ficAuthor.className = "fic-author"
+    // let ficNameElString = ""
+    mainHeader.appendChild(ficNameEl)
+    mainHeader.innerHTML += " by " + fic.ficAuthor
+    console.log(mainHeader)
     // mainHeader.textContent += "by"
-    mainHeader.appendChild(ficAuthor)
+    // mainHeader.appendChild(ficAuthor)
 
     header.appendChild(mainHeader)
 
-    let ficFandom = document.createElement("div")
+    let ficFandom = document.createElement("h5")
     ficFandom.innerHTML = fic.ficFandom
-    ficFandom.className = "fic-fandom"
+    ficFandom.className = "fic-fandom fandom"
 
     header.appendChild(ficFandom)
     
     mainDiv.appendChild(header)
 
     // Tags
-    let tagsWrapper = document.createElement("div")
+    let tagsWrapper = document.createElement("ul")
     tagsWrapper.innerHTML = fic.ficWarnings + fic.ficRelationships + fic.ficCharacters + fic.ficTags
-    tagsWrapper.className = "tags-wrapper"
+    tagsWrapper.className = "tags-wrapper tags commas"
     
     mainDiv.appendChild(tagsWrapper)
 
     // Summary
     let summaryWrapper = document.createElement("div")    
     summaryWrapper.innerHTML = fic.ficSummary
-    summaryWrapper.className = "summary-wrapper"
+    summaryWrapper.className = "summary-wrapper summary"
 
     mainDiv.appendChild(summaryWrapper)
 
     // Stats
-    let statsWrapper = document.createElement("div")
+    let statsWrapper = document.createElement("dl")
     statsWrapper.innerHTML = fic.ficLanguage + fic.ficStats
-    statsWrapper.className = "stats-wrapper"
-    
+    statsWrapper.className = "stats-wrapper stats"
+    console.log(statsWrapper)
     mainDiv.appendChild(statsWrapper)
 
     console.log(mainDiv)
@@ -110,7 +114,7 @@ function createElementsFromArray(fic){
     return mainDiv
 }
 
-// add links for fics 
+// add links for fics // working
 function fixLinks(mainDiv){
     var links = mainDiv.getElementsByTagName("a");
     for (var i = 0; i < links.length; i++) {
@@ -121,10 +125,8 @@ function fixLinks(mainDiv){
         if (location.indexOf("https://archiveofourown.org/") === -1) {
             location = "https://archiveofourown.org/" + location
         }
-        console.log(location)
-        ln.onclick = function () {
-            chrome.tabs.create({ active: true, url: location });
-        };
+
+        ln.href = location;
        
     }
 };

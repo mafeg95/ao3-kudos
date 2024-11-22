@@ -3,6 +3,7 @@
 //         text: "OFF",
 //     });
 // });
+chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
