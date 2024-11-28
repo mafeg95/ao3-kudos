@@ -30,18 +30,19 @@
 //     }
 // );
 
+
 window.addEventListener('load', function(){
 
     let fics = document.getElementById("fics")
     
-    chrome.storage.session.get(["ficKeys6"], function (result) { // not quite working
+    chrome.storage.session.get(["storedFics"], function (result) { // not quite working
         console.log("storage")
         console.log(result)
-        let keys = Object.keys(result.ficKeys6)
-        console.log(result.ficKeys6)
+        let keys = Object.keys(result.storedFics)
+        console.log(result.storedFics)
         keys.forEach(fic => {
             console.log(fic)
-            let createdFic = createElementsFromArray(result.ficKeys6[fic])
+            let createdFic = createElementsFromArray(result.storedFics[fic])
             fics.appendChild(createdFic)
         });
     })
@@ -65,17 +66,9 @@ function createElementsFromArray(fic){ // working - needs css
     ficNameEl.textContent = fic.ficName
     ficNameEl.href = fic.ficUrl
     ficNameEl.className = "fic-name"
-    console.log(`${ficNameEl}`)
-    console.log(`${ficNameEl.innerHTML}`)
-    // let ficAuthor = document.createElement("a")
-    // ficAuthor.innerHTML = fic.ficAuthor
-    // ficAuthor.className = "fic-author"
-    // let ficNameElString = ""
+    
     mainHeader.appendChild(ficNameEl)
     mainHeader.innerHTML += " by " + fic.ficAuthor
-    console.log(mainHeader)
-    // mainHeader.textContent += "by"
-    // mainHeader.appendChild(ficAuthor)
 
     header.appendChild(mainHeader)
 

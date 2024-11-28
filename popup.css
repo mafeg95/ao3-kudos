@@ -2547,7 +2547,7 @@ dl.stats dd {
     background: none;
     width: auto;
     min-width: 0;
-    display: inline;
+    display: inline-block;
     clear: none;
     float: none;
     margin: auto;
@@ -4837,7 +4837,7 @@ dl#symbols-key dd {
 /*END== */
 
 .my-kudos-body {
-    padding: 0 50px 0;
+    padding: 0 11em 0;
 }
 
 .body-header {
@@ -4847,4 +4847,9 @@ dl#symbols-key dd {
 
 .my-kudos {
     cursor: pointer;
+}
+
+.stats-wrapper {
+    flex-wrap: wrap;
+    text-align: right;
 }
