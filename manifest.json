@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Kudos",
+    "name": "Save Kudos on AO3",
     "version": "1.0",
-    "description": "Add the reading time to Chrome Extension documentation articles",
+    "description": "Save the fics that you have given Kudos to on AO3",
     "content_scripts": [
         {
             "matches": [
