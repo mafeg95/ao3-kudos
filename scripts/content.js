@@ -1,15 +1,17 @@
 if (document.readyState !== 'loading') {
     scrapeKudosFromPage()
     addMyKudosToMenu()
+    updateUsername()
 } else {
     document.addEventListener('DOMContentLoaded', scrapeKudosFromPage);
     document.addEventListener('DOMContentLoaded', addMyKudosToMenu);
+    document.addEventListener('DOMContentLoaded', updateUsername);
 }
 
 function scrapeKudosFromPage(){
     const kudosButton = document.getElementById("kudo_submit")
     
-    if (kudosButton !== null) {
+    if (typeof kudosButton !== "undefined" && kudosButton !== null) {
         kudosButton.addEventListener("click", () => {
             let ficObject = {}
             let ficName = document.getElementsByClassName("title heading")[0].textContent.trim() || ''
@@ -65,8 +67,8 @@ function updateStorage(ficsObject, element, ficObject) {
 
 function addMyKudosToMenu(){
     const dropdownMenu = document.getElementsByClassName("user navigation actions")[0]
-
-    if (dropdownMenu !== null) {
+    
+    if (typeof dropdownMenu !== "undefined" && dropdownMenu !== null) {
         dropdownMenu.addEventListener('mouseover', function () {
             let li = document.createElement("li")
             let a = document.createElement("a")
@@ -79,6 +81,7 @@ function addMyKudosToMenu(){
 
             if (this.children[0].children[1].children[index].textContent !== "My Kudos") {
                 this.children[0].children[1].appendChild(li)
+
                 a.addEventListener('click', function () {
                     chrome.runtime.sendMessage({ action: "MyKudos" })
                 })
@@ -87,4 +90,8 @@ function addMyKudosToMenu(){
     }
 }
 
+function updateUsername(){
+    let username = document.querySelector(".icon > a").href.split("/users/")[1]
 
+    chrome.storage.session.set({ username: username });
+}

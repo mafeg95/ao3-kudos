@@ -1,15 +1,20 @@
-
 window.addEventListener('load', function(){
 
     let fics = document.getElementById("fics")
-    
-    chrome.storage.session.get(["storedFics"], function (result) { // not quite working
 
-        let keys = Object.keys(result.storedFics)
-        keys.forEach(fic => {
-            let createdFic = createElementsFromArray(result.storedFics[fic])
-            fics.appendChild(createdFic)
-        });
+
+    chrome.storage.session.get(["username"], function (result) { 
+        fixStaticLinks(result.username)
+    })
+
+    chrome.storage.session.get(["storedFics"], function (result) { // not quite working
+        if (typeof result.storedFics !== "undefined" && result.storedFics !== null){
+            let keys = Object.keys(result.storedFics)
+            keys.forEach(fic => {
+                let createdFic = createElementsFromArray(result.storedFics[fic])
+                fics.appendChild(createdFic)
+            });
+        }
     })
 })
 
@@ -91,3 +96,18 @@ function fixLinks(mainDiv){
        
     }
 };
+
+function fixStaticLinks(user) {
+    var links = document.getElementsByTagName("a");
+
+    for (var i = 0; i < links.length; i++) {
+        var ln = links[i];
+        var location = ln.href.replace("username", user);
+
+        ln.href = location
+    }
+    
+    // change the text of the dropdown menu
+    let dropdown = document.querySelector(".dropdown > a")
+    dropdown.textContent = dropdown.textContent.replace("username", user)
+}

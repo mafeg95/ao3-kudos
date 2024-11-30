@@ -1076,7 +1076,6 @@ http://otwcode.github.com/docs/front_end_coding/patterns/supertypes
     margin: 0;
     border: none;
     background: transparent;
-    vertical-align: middle;
     word-wrap: break-word;
     box-shadow: none;
 }
