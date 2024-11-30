@@ -1,34 +1,9 @@
-
-// function addMyKudosToMenu() {
-//     const dropdownMenu = document.getElementsByClassName("user navigation actions")[0]
-//     console.log("content loaded")
-//     console.log(dropdownMenu)
-//     if (dropdownMenu) {
-//         console.log(dropdownMenu)
-//         dropdownMenu.addEventListener('mouseover', function () {
-//             let li = document.createElement("li")
-//             let a = document.createElement("a")
-
-//             a.className = "my-kudos"
-//             a.textContent = "My Kudos"
-//             li.className = "my-kudos"
-//             li.appendChild(a)
-//             let index = this.children[0].children[1].children.length - 1
-
-//             if (this.children[0].children[1].children[index].textContent !== "My Kudos") {
-//                 this.children[0].children[1].appendChild(li)
-//                 a.addEventListener('click', function () {
-//                     chrome.runtime.sendMessage({ action: "MyKudos" })
-//                 })
-//             }
-//         });
-//     }
-// }
-
 if (document.readyState !== 'loading') {
     scrapeKudosFromPage()
+    addMyKudosToMenu()
 } else {
     document.addEventListener('DOMContentLoaded', scrapeKudosFromPage);
+    document.addEventListener('DOMContentLoaded', addMyKudosToMenu);
 }
 
 function scrapeKudosFromPage(){
@@ -67,7 +42,6 @@ function scrapeKudosFromPage(){
                 ficObject["ficSummary"] = ""
             }
 
-            console.log(ficObject)
             updateStorage('fics', ficName, ficObject)
         })
     }
@@ -89,37 +63,10 @@ function updateStorage(ficsObject, element, ficObject) {
     })
 }
 
-// document.addEventListener('DOMContentLoaded', function () {
-//     const dropdownMenu = document.getElementsByClassName("user navigation actions")[0]
-//     console.log("content loaded")
-//     console.log(dropdownMenu)
-//     if (dropdownMenu){
-//         console.log(dropdownMenu)
-//         dropdownMenu.addEventListener('mouseover', function () {
-//             let li = document.createElement("li")
-//             let a = document.createElement("a")
-
-//             a.className = "my-kudos"
-//             a.textContent = "My Kudos"
-//             li.className = "my-kudos"
-//             li.appendChild(a)
-//             let index = this.children[0].children[1].children.length - 1
-
-//             if (this.children[0].children[1].children[index].textContent !== "My Kudos") {
-//                 this.children[0].children[1].appendChild(li)
-//                 a.addEventListener('click', function () {
-//                     chrome.runtime.sendMessage({ action: "MyKudos" })
-//                 })
-//             }
-//         });
-//     }
-// })
 function addMyKudosToMenu(){
     const dropdownMenu = document.getElementsByClassName("user navigation actions")[0]
-    console.log("content loaded")
-    console.log(dropdownMenu)
-    if (dropdownMenu) {
-        console.log(dropdownMenu)
+
+    if (dropdownMenu !== null) {
         dropdownMenu.addEventListener('mouseover', function () {
             let li = document.createElement("li")
             let a = document.createElement("a")
@@ -140,36 +87,4 @@ function addMyKudosToMenu(){
     }
 }
 
-if (document.readyState !== 'loading') {
-    addMyKudosToMenu()
-} else {
-    document.addEventListener('DOMContentLoaded', addMyKudosToMenu);
-}
 
-
-// const mykudosButton = document.getElementsByClassName("my-kudos")[0]
-
-// if (mykudosButton){
-//     mykudosButton.addEventListener('click', function () {
-//         console.log("worked")
-//         chrome.runtime.sendMessage({ action: "MyKudos"})
-//         chrome.tabs.create({ 'url': chrome.extension.getURL('popup.html'), 'selected': true });
-//     })
-// }
-
-
-// function openTab(filename) {
-//     var myid = chrome.i18n.getMessage("@@extension_id");
-//     chrome.windows.getCurrent(function (win) {
-//         chrome.tabs.query({ 'windowId': win.id }, function (tabArray) {
-//             for (var i in tabArray) {
-//                 if (tabArray[i].url == "chrome-extension://" + myid + "/" + filename) { // 
-//                     console.log("already opened");
-//                     chrome.tabs.update(tabArray[i].id, { active: true }); 
-//                     return;
-//                 }
-//             }
-//             chrome.tabs.create({ url: chrome.extension.getURL(filename) });
-//         });
-//     });
-// }

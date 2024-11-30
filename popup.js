@@ -1,47 +1,12 @@
-// chrome.runtime.onMessage.addListener(
-//     function (request, sender, sendResponse) {
-//         console.log(sender.tab ?
-//             "from a content script:" + sender.tab.url :
-//             "from the extension");
-//         let element = document.createElement("li")
-//         element.textContent = request.name
-//         element.className = "stories"
-//         console.log(element)
-//         let fics = document.getElementById("fics")
-//         // console.log(name)
-//         // console.log(fics)
-//         fics.appendChild(element)
-//         console.log('worked')
-//         console.log(request.name)
-//         console.log(sendResponse)
-        
-//         // chrome.storage.sync.set(
-//         //      { name: request.name },
-//         //     { name: request.name },
-//         //     () => {
-//         //         // Update status to let user know options were saved.
-//         //         const status = document.getElementById('status');
-//         //         status.textContent = 'Options saved.';
-//         //         setTimeout(() => {
-//         //             status.textContent = '';
-//         //         }, 750);
-//         //     }
-//         // );
-//     }
-// );
-
 
 window.addEventListener('load', function(){
 
     let fics = document.getElementById("fics")
     
     chrome.storage.session.get(["storedFics"], function (result) { // not quite working
-        console.log("storage")
-        console.log(result)
+
         let keys = Object.keys(result.storedFics)
-        console.log(result.storedFics)
         keys.forEach(fic => {
-            console.log(fic)
             let createdFic = createElementsFromArray(result.storedFics[fic])
             fics.appendChild(createdFic)
         });
@@ -82,7 +47,12 @@ function createElementsFromArray(fic){ // working - needs css
 
     // Tags
     let tagsWrapper = document.createElement("ul")
-    tagsWrapper.innerHTML = fic.ficWarnings + fic.ficRelationships + fic.ficCharacters + fic.ficTags
+    let strongFicWarnings = document.createElement("strong")
+    strongFicWarnings.innerHTML = fic.ficWarnings
+
+    tagsWrapper.appendChild(strongFicWarnings)
+
+    tagsWrapper.innerHTML += " " + fic.ficRelationships + fic.ficCharacters + fic.ficTags
     tagsWrapper.className = "tags-wrapper tags commas"
     
     mainDiv.appendChild(tagsWrapper)
@@ -98,10 +68,8 @@ function createElementsFromArray(fic){ // working - needs css
     let statsWrapper = document.createElement("dl")
     statsWrapper.innerHTML = fic.ficLanguage + fic.ficStats
     statsWrapper.className = "stats-wrapper stats"
-    console.log(statsWrapper)
-    mainDiv.appendChild(statsWrapper)
 
-    console.log(mainDiv)
+    mainDiv.appendChild(statsWrapper)
 
     fixLinks(mainDiv)
     return mainDiv
@@ -123,40 +91,3 @@ function fixLinks(mainDiv){
        
     }
 };
-
-// links for fics
-// window.addEventListener('click', function (e) {
-//     if (e.target.href !== undefined) {
-//         chrome.tabs.create({ url: e.target.href })
-//     }
-// })
-
-// function updateStorage(key, element){
-//     objArray = []
-//     chrome.storage.sync.get(key, function(result){
-//         if (result) {
-//             objArray = result[key]
-//         }
-
-//         objArray.push(element)
-
-//         chrome.storage.sync.set({ key: objArray }, function () {
-//             console.log('Updated myObjArray in storage');
-//         });
-//     })
-// }
-// var popupWindow = window.open(
-//     chrome.extension.getURL("normal_popup.html"),
-//     "exampleName",
-//     "width=400,height=400"
-// );
-// window.close();
-
-// const restoreOptions = () => {
-//     chrome.storage.sync.get(
-//         { favoriteColor: 'red' },
-//         (items) => {
-//             document.getElementById('color').value = items.favoriteColor;
-//         }
-//     );
-// };

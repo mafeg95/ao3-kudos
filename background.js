@@ -1,26 +1,8 @@
-// chrome.runtime.onInstalled.addListener(() => {
-//     chrome.action.setBadgeText({
-//         text: "OFF",
-//     });
-// });
 chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        console.log(sender.tab ?
-            "from a content script:" + sender.tab.url :
-            "from the extension");
-    //     let element = document.createElement("li")
-    //     element.textContent = request.name
-    //     element.className = "stories"
-    //     console.log(element)
-    //     // let fics = document.getElementById("fics")
-    //     // console.log(name)
-    // // console.log(fics)
-        console.log('worked')
-        console.log(request.action)
-        console.log(sendResponse)
-        console.log(sender.action)
+        
         if (request.action === "MyKudos"){
             openTab("popup.html")
         }
