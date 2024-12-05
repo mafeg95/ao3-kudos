@@ -109,7 +109,1251 @@
 
             </ul>
         </div>
-
+        <!--filters subnav-->
+        <form class="narrow-hidden filters" id="bookmark-filters" action="/bookmarks" accept-charset="UTF-8" method="get">
+            <h3 class="landmark heading">Filters</h3>
+            <fieldset>
+                <legend>Filter results:</legend>
+                <dl>
+                    <dt class="landmark">Submit</dt>
+                    <dd class="submit actions"><input type="submit" name="commit" value="Sort and Filter" /></dd>
+                    <dt class="sort">
+                        <label for="bookmark_search_sort_column">Sort by</label>
+                    </dt>
+                    <dd class="sort">
+                        <select name="bookmark_search[sort_column]" id="bookmark_search_sort_column">
+                            <option value="created_at">Date Bookmarked</option>
+                            <option value="bookmarkable_date">Date Updated</option>
+                        </select>
+                    </dd>
+        
+                    <dt class="include heading">
+                        <h4 class="heading">
+                            Include
+                        </h4>
+                        <a class="help symbol question modal" title="Bookmark filters include tags"
+                            href="/help/bookmark-filters-include-tags.html"><span
+                                class="symbol question"><span>?</span></span></a>
+                    </dt>
+                    <dd class="include tags group">
+                        <dl>
+                            <dt id="toggle_include_rating_tags" class="filter-toggle rating tags">
+                                <span class="landmark">Include </span>Ratings
+                            </dt>
+                            <dd id="include_rating_tags" class="expandable rating tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_rating_ids_13">
+                                            <input type="radio" name="include_bookmark_search[rating_ids][]"
+                                                id="include_bookmark_search_rating_ids_13" value="13" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Explicit (38)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_rating_ids_12">
+                                            <input type="radio" name="include_bookmark_search[rating_ids][]"
+                                                id="include_bookmark_search_rating_ids_12" value="12" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Mature (18)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_rating_ids_11">
+                                            <input type="radio" name="include_bookmark_search[rating_ids][]"
+                                                id="include_bookmark_search_rating_ids_11" value="11" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Teen And Up Audiences
+                                                (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_rating_ids_10">
+                                            <input type="radio" name="include_bookmark_search[rating_ids][]"
+                                                id="include_bookmark_search_rating_ids_10" value="10" />
+                                            <span class="indicator" aria-hidden="true"></span><span>General Audiences (4)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_archive_warning_tags" class="filter-toggle warning tags">
+                                <span class="landmark">Include </span>Warnings
+                            </dt>
+                            <dd id="include_archive_warning_tags" class="expandable warning tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_archive_warning_ids_16">
+                                            <input type="checkbox" name="include_bookmark_search[archive_warning_ids][]"
+                                                id="include_bookmark_search_archive_warning_ids_16" value="16" />
+                                            <span class="indicator" aria-hidden="true"></span><span>No Archive Warnings Apply
+                                                (35)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_archive_warning_ids_14">
+                                            <input type="checkbox" name="include_bookmark_search[archive_warning_ids][]"
+                                                id="include_bookmark_search_archive_warning_ids_14" value="14" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Creator Chose Not To Use
+                                                Archive Warnings (22)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_archive_warning_ids_17">
+                                            <input type="checkbox" name="include_bookmark_search[archive_warning_ids][]"
+                                                id="include_bookmark_search_archive_warning_ids_17" value="17" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Graphic Depictions Of
+                                                Violence (9)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_archive_warning_ids_20">
+                                            <input type="checkbox" name="include_bookmark_search[archive_warning_ids][]"
+                                                id="include_bookmark_search_archive_warning_ids_20" value="20" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Underage Sex (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_archive_warning_ids_18">
+                                            <input type="checkbox" name="include_bookmark_search[archive_warning_ids][]"
+                                                id="include_bookmark_search_archive_warning_ids_18" value="18" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Major Character Death
+                                                (6)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_archive_warning_ids_19">
+                                            <input type="checkbox" name="include_bookmark_search[archive_warning_ids][]"
+                                                id="include_bookmark_search_archive_warning_ids_19" value="19" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Rape/Non-Con (4)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_category_tags" class="filter-toggle category tags">
+                                <span class="landmark">Include </span>Categories
+                            </dt>
+                            <dd id="include_category_tags" class="expandable category tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_category_ids_22">
+                                            <input type="checkbox" name="include_bookmark_search[category_ids][]"
+                                                id="include_bookmark_search_category_ids_22" value="22" />
+                                            <span class="indicator" aria-hidden="true"></span><span>F/M (46)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_category_ids_116">
+                                            <input type="checkbox" name="include_bookmark_search[category_ids][]"
+                                                id="include_bookmark_search_category_ids_116" value="116" />
+                                            <span class="indicator" aria-hidden="true"></span><span>F/F (29)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_category_ids_2246">
+                                            <input type="checkbox" name="include_bookmark_search[category_ids][]"
+                                                id="include_bookmark_search_category_ids_2246" value="2246" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Multi (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_category_ids_23">
+                                            <input type="checkbox" name="include_bookmark_search[category_ids][]"
+                                                id="include_bookmark_search_category_ids_23" value="23" />
+                                            <span class="indicator" aria-hidden="true"></span><span>M/M (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_category_ids_21">
+                                            <input type="checkbox" name="include_bookmark_search[category_ids][]"
+                                                id="include_bookmark_search_category_ids_21" value="21" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Gen (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_category_ids_24">
+                                            <input type="checkbox" name="include_bookmark_search[category_ids][]"
+                                                id="include_bookmark_search_category_ids_24" value="24" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Other (1)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_fandom_tags" class="filter-toggle fandom tags">
+                                <span class="landmark">Include </span>Fandoms
+                            </dt>
+                            <dd id="include_fandom_tags" class="expandable fandom tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_136512">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_136512" value="136512" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Harry Potter - J. K. Rowling
+                                                (50)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_32045">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_32045" value="32045" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The Vampire Diaries (TV)
+                                                (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_379999">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_379999" value="379999" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Once Upon a Time (TV)
+                                                (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_414093">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_414093" value="414093" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Marvel Cinematic Universe
+                                                (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_1635478">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_1635478" value="1635478" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The 100 (TV) (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_115613">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_115613" value="115613" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Percy Jackson and the
+                                                Olympians - Rick Riordan (2)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_1503">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_1503" value="1503" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Mean Girls (2004) (1)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_2247">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_2247" value="2247" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Veronica Mars (TV)
+                                                (1)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_813205">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_813205" value="813205" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The Originals (TV)
+                                                (1)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_fandom_ids_1001939">
+                                            <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+                                                id="include_bookmark_search_fandom_ids_1001939" value="1001939" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The Avengers (Marvel Movies)
+                                                (1)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_character_tags" class="filter-toggle character tags">
+                                <span class="landmark">Include </span>Characters
+                            </dt>
+                            <dd id="include_character_tags" class="expandable character tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_1048">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_1048" value="1048" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger (44)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_1589">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_1589" value="1589" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Draco Malfoy (33)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_1803">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_1803" value="1803" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Harry Potter (29)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_2211">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_2211" value="2211" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Ron Weasley (22)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_2174">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_2174" value="2174" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Ginny Weasley (19)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_9876">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_9876" value="9876" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Blaise Zabini (11)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_321">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_321" value="321" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Sirius Black (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_974">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_974" value="974" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Luna Lovegood (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_1806">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_1806" value="1806" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Pansy Parkinson (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_character_ids_1049">
+                                            <input type="checkbox" name="include_bookmark_search[character_ids][]"
+                                                id="include_bookmark_search_character_ids_1049" value="1049" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Remus Lupin (8)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_relationship_tags" class="filter-toggle relationship tags">
+                                <span class="landmark">Include </span>Relationships
+                            </dt>
+                            <dd id="include_relationship_tags" class="expandable relationship tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_10760">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_10760" value="10760" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Draco
+                                                Malfoy (19)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_3548">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_3548" value="3548" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Harry Potter/Ginny Weasley
+                                                (7)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_3458">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_3458" value="3458" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Ron Weasley
+                                                (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_12235">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_12235" value="12235" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Sirius Black/Hermione
+                                                Granger (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_570291">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_570291" value="570291" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Evil Queen | Regina
+                                                Mills/Emma Swan (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_1110">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_1110" value="1110" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Sirius Black/Remus Lupin
+                                                (4)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_12792">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_12792" value="12792" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Remus Lupin/Nymphadora Tonks
+                                                (4)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_1051">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_1051" value="1051" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Remus Lupin
+                                                (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_18827">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_18827" value="18827" />
+                                            <span class="indicator" aria-hidden="true"></span><span>James Potter/Lily Evans
+                                                Potter (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_relationship_ids_66931">
+                                            <input type="checkbox" name="include_bookmark_search[relationship_ids][]"
+                                                id="include_bookmark_search_relationship_ids_66931" value="66931" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Pansy
+                                                Parkinson (3)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_freeform_tags" class="filter-toggle freeform tags">
+                                <span class="landmark">Include </span>Additional Tags
+                            </dt>
+                            <dd id="include_freeform_tags" class="expandable freeform tags">
+                                <ul>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_176">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_176" value="176" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Angst (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_123409">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_123409" value="123409" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Explicit Sexual Content
+                                                (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_2026">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_2026" value="2026" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Smut (11)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_4359">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_4359" value="4359" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Oral Sex (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_103132">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_103132" value="103132" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Slow Burn (9)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_60">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_60" value="60" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Romance (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_62">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_62" value="62" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Humor (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_110">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_110" value="110" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Fluff (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_143795">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_143795" value="143795" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Alternate Universe - Canon
+                                                Divergence (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="include_bookmark_search_freeform_ids_118">
+                                            <input type="checkbox" name="include_bookmark_search[freeform_ids][]"
+                                                id="include_bookmark_search_freeform_ids_118" value="118" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Cunnilingus (7)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_include_tag_tags" class="filter-toggle tag tags">
+                                <span class="landmark">Include </span>Bookmarker's Tags
+                            </dt>
+                            <dd id="include_tag_tags" class="expandable tag tags">
+                                <ul>
+                                </ul>
+                            </dd>
+                            <dt class="autocomplete search">
+                                <label for="bookmark_search_other_tag_names">Other work tags to include</label>
+                            </dt>
+                            <dd class="autocomplete search">
+                                <input class="autocomplete" data-autocomplete-method="/autocomplete/tag"
+                                    data-autocomplete-hint-text="Start typing for suggestions!"
+                                    data-autocomplete-no-results-text="(No suggestions found)" data-autocomplete-min-chars="1"
+                                    data-autocomplete-searching-text="Searching..." type="text"
+                                    name="bookmark_search[other_tag_names]" id="bookmark_search_other_tag_names" />
+                            </dd>
+                            <dt class="bookmarker autocomplete search">
+                                <label for="bookmark_search_other_bookmark_tag_names">Other bookmarker&#39;s tags to
+                                    include</label>
+                            </dt>
+                            <dd class="bookmarker autocomplete search">
+                                <input class="autocomplete" data-autocomplete-method="/autocomplete/tag"
+                                    data-autocomplete-hint-text="Start typing for suggestions!"
+                                    data-autocomplete-no-results-text="(No suggestions found)" data-autocomplete-min-chars="1"
+                                    data-autocomplete-searching-text="Searching..." type="text"
+                                    name="bookmark_search[other_bookmark_tag_names]"
+                                    id="bookmark_search_other_bookmark_tag_names" />
+                            </dd>
+                        </dl>
+                    </dd>
+                    <dt class="exclude heading">
+                        <h4 class="heading">
+                            Exclude
+                        </h4>
+                        <a class="help symbol question modal" title="Bookmark filters exclude tags"
+                            href="/help/bookmark-filters-exclude-tags.html"><span
+                                class="symbol question"><span>?</span></span></a>
+                    </dt>
+                    <dd class="exclude tags group">
+                        <dl>
+                            <dt id="toggle_exclude_rating_tags" class="filter-toggle rating tags">
+                                <span class="landmark">Exclude </span>Ratings
+                            </dt>
+                            <dd id="exclude_rating_tags" class="expandable rating tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_rating_ids_13">
+                                            <input type="checkbox" name="exclude_bookmark_search[rating_ids][]"
+                                                id="exclude_bookmark_search_rating_ids_13" value="13" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Explicit (38)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_rating_ids_12">
+                                            <input type="checkbox" name="exclude_bookmark_search[rating_ids][]"
+                                                id="exclude_bookmark_search_rating_ids_12" value="12" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Mature (18)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_rating_ids_11">
+                                            <input type="checkbox" name="exclude_bookmark_search[rating_ids][]"
+                                                id="exclude_bookmark_search_rating_ids_11" value="11" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Teen And Up Audiences
+                                                (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_rating_ids_10">
+                                            <input type="checkbox" name="exclude_bookmark_search[rating_ids][]"
+                                                id="exclude_bookmark_search_rating_ids_10" value="10" />
+                                            <span class="indicator" aria-hidden="true"></span><span>General Audiences (4)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_archive_warning_tags" class="filter-toggle warning tags">
+                                <span class="landmark">Exclude </span>Warnings
+                            </dt>
+                            <dd id="exclude_archive_warning_tags" class="expandable warning tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_archive_warning_ids_16">
+                                            <input type="checkbox" name="exclude_bookmark_search[archive_warning_ids][]"
+                                                id="exclude_bookmark_search_archive_warning_ids_16" value="16" />
+                                            <span class="indicator" aria-hidden="true"></span><span>No Archive Warnings Apply
+                                                (35)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_archive_warning_ids_14">
+                                            <input type="checkbox" name="exclude_bookmark_search[archive_warning_ids][]"
+                                                id="exclude_bookmark_search_archive_warning_ids_14" value="14" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Creator Chose Not To Use
+                                                Archive Warnings (22)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_archive_warning_ids_17">
+                                            <input type="checkbox" name="exclude_bookmark_search[archive_warning_ids][]"
+                                                id="exclude_bookmark_search_archive_warning_ids_17" value="17" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Graphic Depictions Of
+                                                Violence (9)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_archive_warning_ids_20">
+                                            <input type="checkbox" name="exclude_bookmark_search[archive_warning_ids][]"
+                                                id="exclude_bookmark_search_archive_warning_ids_20" value="20" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Underage Sex (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_archive_warning_ids_18">
+                                            <input type="checkbox" name="exclude_bookmark_search[archive_warning_ids][]"
+                                                id="exclude_bookmark_search_archive_warning_ids_18" value="18" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Major Character Death
+                                                (6)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_archive_warning_ids_19">
+                                            <input type="checkbox" name="exclude_bookmark_search[archive_warning_ids][]"
+                                                id="exclude_bookmark_search_archive_warning_ids_19" value="19" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Rape/Non-Con (4)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_category_tags" class="filter-toggle category tags">
+                                <span class="landmark">Exclude </span>Categories
+                            </dt>
+                            <dd id="exclude_category_tags" class="expandable category tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_category_ids_22">
+                                            <input type="checkbox" name="exclude_bookmark_search[category_ids][]"
+                                                id="exclude_bookmark_search_category_ids_22" value="22" />
+                                            <span class="indicator" aria-hidden="true"></span><span>F/M (46)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_category_ids_116">
+                                            <input type="checkbox" name="exclude_bookmark_search[category_ids][]"
+                                                id="exclude_bookmark_search_category_ids_116" value="116" />
+                                            <span class="indicator" aria-hidden="true"></span><span>F/F (29)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_category_ids_2246">
+                                            <input type="checkbox" name="exclude_bookmark_search[category_ids][]"
+                                                id="exclude_bookmark_search_category_ids_2246" value="2246" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Multi (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_category_ids_23">
+                                            <input type="checkbox" name="exclude_bookmark_search[category_ids][]"
+                                                id="exclude_bookmark_search_category_ids_23" value="23" />
+                                            <span class="indicator" aria-hidden="true"></span><span>M/M (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_category_ids_21">
+                                            <input type="checkbox" name="exclude_bookmark_search[category_ids][]"
+                                                id="exclude_bookmark_search_category_ids_21" value="21" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Gen (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_category_ids_24">
+                                            <input type="checkbox" name="exclude_bookmark_search[category_ids][]"
+                                                id="exclude_bookmark_search_category_ids_24" value="24" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Other (1)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_fandom_tags" class="filter-toggle fandom tags">
+                                <span class="landmark">Exclude </span>Fandoms
+                            </dt>
+                            <dd id="exclude_fandom_tags" class="expandable fandom tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_136512">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_136512" value="136512" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Harry Potter - J. K. Rowling
+                                                (50)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_32045">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_32045" value="32045" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The Vampire Diaries (TV)
+                                                (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_379999">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_379999" value="379999" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Once Upon a Time (TV)
+                                                (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_414093">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_414093" value="414093" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Marvel Cinematic Universe
+                                                (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_1635478">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_1635478" value="1635478" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The 100 (TV) (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_115613">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_115613" value="115613" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Percy Jackson and the
+                                                Olympians - Rick Riordan (2)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_1503">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_1503" value="1503" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Mean Girls (2004) (1)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_2247">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_2247" value="2247" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Veronica Mars (TV)
+                                                (1)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_813205">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_813205" value="813205" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The Originals (TV)
+                                                (1)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_fandom_ids_1001939">
+                                            <input type="checkbox" name="exclude_bookmark_search[fandom_ids][]"
+                                                id="exclude_bookmark_search_fandom_ids_1001939" value="1001939" />
+                                            <span class="indicator" aria-hidden="true"></span><span>The Avengers (Marvel Movies)
+                                                (1)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_character_tags" class="filter-toggle character tags">
+                                <span class="landmark">Exclude </span>Characters
+                            </dt>
+                            <dd id="exclude_character_tags" class="expandable character tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_1048">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_1048" value="1048" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger (44)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_1589">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_1589" value="1589" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Draco Malfoy (33)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_1803">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_1803" value="1803" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Harry Potter (29)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_2211">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_2211" value="2211" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Ron Weasley (22)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_2174">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_2174" value="2174" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Ginny Weasley (19)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_9876">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_9876" value="9876" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Blaise Zabini (11)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_321">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_321" value="321" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Sirius Black (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_974">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_974" value="974" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Luna Lovegood (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_1806">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_1806" value="1806" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Pansy Parkinson (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_character_ids_1049">
+                                            <input type="checkbox" name="exclude_bookmark_search[character_ids][]"
+                                                id="exclude_bookmark_search_character_ids_1049" value="1049" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Remus Lupin (8)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_relationship_tags" class="filter-toggle relationship tags">
+                                <span class="landmark">Exclude </span>Relationships
+                            </dt>
+                            <dd id="exclude_relationship_tags" class="expandable relationship tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_10760">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_10760" value="10760" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Draco
+                                                Malfoy (19)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_3548">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_3548" value="3548" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Harry Potter/Ginny Weasley
+                                                (7)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_3458">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_3458" value="3458" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Ron Weasley
+                                                (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_12235">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_12235" value="12235" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Sirius Black/Hermione
+                                                Granger (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_570291">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_570291" value="570291" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Evil Queen | Regina
+                                                Mills/Emma Swan (5)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_1110">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_1110" value="1110" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Sirius Black/Remus Lupin
+                                                (4)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_12792">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_12792" value="12792" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Remus Lupin/Nymphadora Tonks
+                                                (4)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_1051">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_1051" value="1051" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Remus Lupin
+                                                (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_18827">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_18827" value="18827" />
+                                            <span class="indicator" aria-hidden="true"></span><span>James Potter/Lily Evans
+                                                Potter (3)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_relationship_ids_66931">
+                                            <input type="checkbox" name="exclude_bookmark_search[relationship_ids][]"
+                                                id="exclude_bookmark_search_relationship_ids_66931" value="66931" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Hermione Granger/Pansy
+                                                Parkinson (3)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_freeform_tags" class="filter-toggle freeform tags">
+                                <span class="landmark">Exclude </span>Additional Tags
+                            </dt>
+                            <dd id="exclude_freeform_tags" class="expandable freeform tags">
+                                <ul>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_176">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_176" value="176" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Angst (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_123409">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_123409" value="123409" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Explicit Sexual Content
+                                                (12)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_2026">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_2026" value="2026" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Smut (11)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_4359">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_4359" value="4359" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Oral Sex (10)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_103132">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_103132" value="103132" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Slow Burn (9)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_60">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_60" value="60" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Romance (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_62">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_62" value="62" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Humor (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_110">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_110" value="110" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Fluff (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_143795">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_143795" value="143795" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Alternate Universe - Canon
+                                                Divergence (8)</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="exclude_bookmark_search_freeform_ids_118">
+                                            <input type="checkbox" name="exclude_bookmark_search[freeform_ids][]"
+                                                id="exclude_bookmark_search_freeform_ids_118" value="118" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Cunnilingus (7)</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                            <dt id="toggle_exclude_tag_tags" class="filter-toggle tag tags">
+                                <span class="landmark">Exclude </span>Bookmarker's Tags
+                            </dt>
+                            <dd id="exclude_tag_tags" class="expandable tag tags">
+                                <ul>
+                                </ul>
+                            </dd>
+                            <dt class="autocomplete search">
+                                <label for="bookmark_search_excluded_tag_names">Other work tags to exclude</label>
+                            </dt>
+                            <dd class="autocomplete search">
+                                <input class="autocomplete" data-autocomplete-method="/autocomplete/tag"
+                                    data-autocomplete-hint-text="Start typing for suggestions!"
+                                    data-autocomplete-no-results-text="(No suggestions found)" data-autocomplete-min-chars="1"
+                                    data-autocomplete-searching-text="Searching..." type="text"
+                                    name="bookmark_search[excluded_tag_names]" id="bookmark_search_excluded_tag_names" />
+                            </dd>
+                            <dt class="bookmarker autocomplete search">
+                                <label for="bookmark_search_excluded_bookmark_tag_names">Other bookmarker&#39;s tags to
+                                    exclude</label>
+                            </dt>
+                            <dd class="bookmarker autocomplete search">
+                                <input class="autocomplete" data-autocomplete-method="/autocomplete/tag"
+                                    data-autocomplete-hint-text="Start typing for suggestions!"
+                                    data-autocomplete-no-results-text="(No suggestions found)" data-autocomplete-min-chars="1"
+                                    data-autocomplete-searching-text="Searching..." type="text"
+                                    name="bookmark_search[excluded_bookmark_tag_names]"
+                                    id="bookmark_search_excluded_bookmark_tag_names" />
+                            </dd>
+                        </dl>
+                    </dd>
+        
+                    <dt class="more heading">
+                        <h4 class="heading">More Options</h4>
+                    </dt>
+                    <dd class="more group">
+                        <dl>
+                            <dt class="search">
+                                <label for="bookmark_search_bookmarkable_query">Search within results</label>
+                                <a class="help symbol question modal" title="Bookmark search text help"
+                                    href="/help/bookmark-search-text-help.html"><span
+                                        class="symbol question"><span>?</span></span></a>
+                            </dt>
+                            <dd class="search">
+                                <input type="text" name="bookmark_search[bookmarkable_query]"
+                                    id="bookmark_search_bookmarkable_query" />
+                            </dd>
+        
+                            <dt class="bookmarker search">
+                                <label for="bookmark_search_bookmark_query">Search bookmarker&#39;s tags and notes</label>
+                                <a class="help symbol question modal" title="Bookmark search text help"
+                                    href="/help/bookmark-search-text-help.html"><span
+                                        class="symbol question"><span>?</span></span></a>
+                            </dt>
+                            <dd class="bookmarker search">
+                                <input type="text" name="bookmark_search[bookmark_query]" id="bookmark_search_bookmark_query" />
+                            </dd>
+        
+                            <dt class="language">
+                                <label for="bookmark_search_language_id">Work language</label>
+                            </dt>
+                            <dd class="language">
+                                <select name="bookmark_search[language_id]" id="bookmark_search_language_id">
+                                    <option value="" label=" "></option>
+                                    <option lang="so" value="so">af Soomaali</option>
+                                    <option lang="afr" value="afr">Afrikaans</option>
+                                    <option lang="ain" value="ain">Aynu itak | アイヌ イタㇰ</option>
+                                    <option lang="ar" value="ar">العربية</option>
+                                    <option lang="amh" value="amh">አማርኛ</option>
+                                    <option lang="egy" value="egy">𓂋𓏺𓈖 𓆎𓅓𓏏𓊖</option>
+                                    <option lang="arc" value="arc">ܐܪܡܝܐ | ארמיא</option>
+                                    <option lang="hy" value="hy">հայերեն</option>
+                                    <option lang="ase" value="ase">American Sign Language</option>
+                                    <option lang="ast" value="ast">asturianu</option>
+                                    <option lang="id" value="id">Bahasa Indonesia</option>
+                                    <option lang="ms" value="ms">Bahasa Malaysia</option>
+                                    <option lang="bg" value="bg">Български</option>
+                                    <option lang="bn" value="bn">বাংলা</option>
+                                    <option lang="jv" value="jv">Basa Jawa</option>
+                                    <option lang="ba" value="ba">Башҡорт теле</option>
+                                    <option lang="be" value="be">беларуская</option>
+                                    <option lang="bos" value="bos">Bosanski</option>
+                                    <option lang="br" value="br">Brezhoneg</option>
+                                    <option lang="ca" value="ca">Català</option>
+                                    <option lang="ceb" value="ceb">Cebuano</option>
+                                    <option lang="cs" value="cs">Čeština</option>
+                                    <option lang="chn" value="chn">Chinuk Wawa</option>
+                                    <option lang="crh" value="crh">къырымтатар тили | qırımtatar tili</option>
+                                    <option lang="cy" value="cy">Cymraeg</option>
+                                    <option lang="da" value="da">Dansk</option>
+                                    <option lang="de" value="de">Deutsch</option>
+                                    <option lang="et" value="et">eesti keel</option>
+                                    <option lang="el" value="el">Ελληνικά</option>
+                                    <option lang="sux" value="sux">𒅴𒂠</option>
+                                    <option lang="en" value="en">English</option>
+                                    <option lang="ang" value="ang">Eald Englisċ</option>
+                                    <option lang="es" value="es">Español</option>
+                                    <option lang="eo" value="eo">Esperanto</option>
+                                    <option lang="eu" value="eu">Euskara</option>
+                                    <option lang="fa" value="fa">فارسی</option>
+                                    <option lang="fil" value="fil">Filipino</option>
+                                    <option lang="fr" value="fr">Français</option>
+                                    <option lang="frr" value="frr">Friisk</option>
+                                    <option lang="fur" value="fur">Furlan</option>
+                                    <option lang="ga" value="ga">Gaeilge</option>
+                                    <option lang="gd" value="gd">Gàidhlig</option>
+                                    <option lang="gl" value="gl">Galego</option>
+                                    <option lang="got" value="got">𐌲𐌿𐍄𐌹𐍃𐌺𐌰</option>
+                                    <option lang="gyn" value="gyn">Creolese</option>
+                                    <option lang="hak" value="hak">中文-客家话</option>
+                                    <option lang="ko" value="ko">한국어</option>
+                                    <option lang="hau" value="hau">Hausa | هَرْشَن هَوْسَ</option>
+                                    <option lang="hi" value="hi">हिन्दी</option>
+                                    <option lang="hr" value="hr">Hrvatski</option>
+                                    <option lang="haw" value="haw">ʻŌlelo Hawaiʻi</option>
+                                    <option lang="ia" value="ia">Interlingua</option>
+                                    <option lang="zu" value="zu">isiZulu</option>
+                                    <option lang="is" value="is">Íslenska</option>
+                                    <option lang="it" value="it">Italiano</option>
+                                    <option lang="he" value="he">עברית</option>
+                                    <option lang="kal" value="kal">Kalaallisut</option>
+                                    <option lang="kan" value="kan">ಕನ್ನಡ</option>
+                                    <option lang="kat" value="kat">ქართული</option>
+                                    <option lang="cor" value="cor">Kernewek</option>
+                                    <option lang="khm" value="khm">ភាសាខ្មែរ</option>
+                                    <option lang="qkz" value="qkz">Khuzdul</option>
+                                    <option lang="sw" value="sw">Kiswahili</option>
+                                    <option lang="ht" value="ht">kreyòl ayisyen</option>
+                                    <option lang="ku" value="ku">Kurdî | کوردی</option>
+                                    <option lang="kir" value="kir">Кыргызча</option>
+                                    <option lang="fcs" value="fcs">Langue des signes québécoise</option>
+                                    <option lang="lv" value="lv">Latviešu valoda</option>
+                                    <option lang="lb" value="lb">Lëtzebuergesch</option>
+                                    <option lang="lt" value="lt">Lietuvių kalba</option>
+                                    <option lang="la" value="la">Lingua latina</option>
+                                    <option lang="hu" value="hu">Magyar</option>
+                                    <option lang="mk" value="mk">македонски</option>
+                                    <option lang="ml" value="ml">മലയാളം</option>
+                                    <option lang="mt" value="mt">Malti</option>
+                                    <option lang="mnc" value="mnc">ᠮᠠᠨᠵᡠ ᡤᡳᠰᡠᠨ</option>
+                                    <option lang="qmd" value="qmd">Mando&#39;a</option>
+                                    <option lang="mr" value="mr">मराठी</option>
+                                    <option lang="mik" value="mik">Mikisúkî</option>
+                                    <option lang="mon" value="mon">ᠮᠣᠩᠭᠣᠯ ᠪᠢᠴᠢᠭ᠌ | Монгол Кирилл үсэг</option>
+                                    <option lang="my" value="my">မြန်မာဘာသာ</option>
+                                    <option lang="myv" value="myv">Эрзянь кель</option>
+                                    <option lang="nah" value="nah">Nāhuatl</option>
+                                    <option lang="nan" value="nan">中文-闽南话 臺語</option>
+                                    <option lang="ppl" value="ppl">Nawat</option>
+                                    <option lang="nl" value="nl">Nederlands</option>
+                                    <option lang="ja" value="ja">日本語</option>
+                                    <option lang="no" value="no">Norsk</option>
+                                    <option lang="azj" value="azj">Азәрбајҹан дили | آذربایجان دیلی</option>
+                                    <option lang="ce" value="ce">Нохчийн мотт</option>
+                                    <option lang="ood" value="ood">‘O’odham Ñiok</option>
+                                    <option lang="ota" value="ota">لسان عثمانى</option>
+                                    <option lang="ps" value="ps">پښتو</option>
+                                    <option lang="nds" value="nds">Plattdüütsch</option>
+                                    <option lang="pl" value="pl">Polski</option>
+                                    <option lang="ptBR" value="ptBR">Português brasileiro</option>
+                                    <option lang="ptPT" value="ptPT">Português europeu</option>
+                                    <option lang="pa" value="pa">ਪੰਜਾਬੀ</option>
+                                    <option lang="kaz" value="kaz">qazaqşa | қазақша</option>
+                                    <option lang="qlq" value="qlq">Uncategorized Constructed Languages</option>
+                                    <option lang="qya" value="qya">Quenya</option>
+                                    <option lang="ro" value="ro">Română</option>
+                                    <option lang="ru" value="ru">Русский</option>
+                                    <option lang="sco" value="sco">Scots</option>
+                                    <option lang="sq" value="sq">Shqip</option>
+                                    <option lang="sjn" value="sjn">Sindarin</option>
+                                    <option lang="si" value="si">සිංහල</option>
+                                    <option lang="sk" value="sk">Slovenčina</option>
+                                    <option lang="slv" value="slv">Slovenščina</option>
+                                    <option lang="gem" value="gem">Sprēkō Þiudiskō</option>
+                                    <option lang="sr" value="sr">Српски</option>
+                                    <option lang="fi" value="fi">suomi</option>
+                                    <option lang="sv" value="sv">Svenska</option>
+                                    <option lang="ta" value="ta">தமிழ்</option>
+                                    <option lang="tat" value="tat">татар теле</option>
+                                    <option lang="mri" value="mri">te reo Māori</option>
+                                    <option lang="tel" value="tel">తెలుగు</option>
+                                    <option lang="th" value="th">ไทย</option>
+                                    <option lang="tqx" value="tqx">Thermian</option>
+                                    <option lang="bod" value="bod">བོད་སྐད་</option>
+                                    <option lang="vi" value="vi">Tiếng Việt</option>
+                                    <option lang="cop" value="cop">ϯⲙⲉⲧⲣⲉⲙⲛ̀ⲭⲏⲙⲓ</option>
+                                    <option lang="tlh" value="tlh">tlhIngan-Hol</option>
+                                    <option lang="tok" value="tok">toki pona</option>
+                                    <option lang="trf" value="trf">Trinidadian Creole</option>
+                                    <option lang="tsd" value="tsd">τσακώνικα</option>
+                                    <option lang="chr" value="chr">ᏣᎳᎩ ᎦᏬᏂᎯᏍᏗ</option>
+                                    <option lang="tr" value="tr">Türkçe</option>
+                                    <option lang="uk" value="uk">Українська</option>
+                                    <option lang="urd" value="urd">اُردُو</option>
+                                    <option lang="uig" value="uig">ئۇيغۇر تىلى</option>
+                                    <option lang="vol" value="vol">Volapük</option>
+                                    <option lang="wuu" value="wuu">中文-吴语</option>
+                                    <option lang="yi" value="yi">יידיש</option>
+                                    <option lang="yua" value="yua">maayaʼ tʼàan</option>
+                                    <option lang="yue" value="yue">中文-广东话 粵語</option>
+                                    <option lang="zh" value="zh">中文-普通话 國語</option>
+                                </select>
+                            </dd>
+        
+                            <dt class="options">Bookmark types</dt>
+                            <dd class="options">
+                                <ul>
+                                    <li>
+                                        <label for="bookmark_search_rec">
+                                            <input name="bookmark_search[rec]" type="hidden" value="0"
+                                                autocomplete="off" /><input type="checkbox" value="1"
+                                                name="bookmark_search[rec]" id="bookmark_search_rec" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Recs only</span>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="bookmark_search_with_notes">
+                                            <input name="bookmark_search[with_notes]" type="hidden" value="0"
+                                                autocomplete="off" /><input type="checkbox" value="1"
+                                                name="bookmark_search[with_notes]" id="bookmark_search_with_notes" />
+                                            <span class="indicator" aria-hidden="true"></span><span>Only bookmarks with
+                                                notes</span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </dd>
+                        </dl>
+                    </dd>
+                    <dt class="landmark">Submit</dt>
+                    <dd class="submit actions"><input type="submit" name="commit" value="Sort and Filter" /></dd>
+                </dl>
+        
+                <p class="footnote">
+                    <a href="/users/mafeg95/bookmarks">Clear Filters</a>
+                </p>
+        
+                <div>
+        
+        
+        
+        
+                    <input type="hidden" name="user_id" id="user_id" value="mafeg95" class="text" autocomplete="off" />
+                </div>
+            </fieldset>
     </body>
 
 </html>
