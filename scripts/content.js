@@ -1,3 +1,63 @@
+class MaxHeap {
+    constructor() {
+        this.heap = [];
+    }
+
+    // Helper functions
+    parent(i) { return Math.floor((i - 1) / 2); }
+    left(i) { return 2 * i + 1; }
+    right(i) { return 2 * i + 2; }
+
+    // Insert or update an existing fandom
+    insertOrUpdate(category, count) {
+        let index = this.heap.findIndex(item => {
+            // debugger
+            return item.category === category
+        });
+
+        if (index !== -1) {
+            // Update count if fandom exists
+            this.heap[index].count += count;
+            this.bubbleUp(index);
+            this.bubbleDown(index);
+        } else {
+            // Insert new fandom
+            this.heap.push({ category, count });
+            this.bubbleUp(this.heap.length - 1);
+        }
+    }
+
+    bubbleUp(index) {
+        while (index > 0 && this.heap[index].count > this.heap[this.parent(index)].count) {
+            [this.heap[index], this.heap[this.parent(index)]] =
+                [this.heap[this.parent(index)], this.heap[index]];
+            index = this.parent(index);
+        }
+    }
+
+    bubbleDown(index) {
+        let largest = index;
+        const left = this.left(index);
+        const right = this.right(index);
+
+        if (left < this.heap.length && this.heap[left].count > this.heap[largest].count) {
+            largest = left;
+        }
+        if (right < this.heap.length && this.heap[right].count > this.heap[largest].count) {
+            largest = right;
+        }
+        if (largest !== index) {
+            [this.heap[index], this.heap[largest]] = [this.heap[largest], this.heap[index]];
+            this.bubbleDown(largest);
+        }
+    }
+
+    getTopFandoms(k) {
+        // Return top k elements
+        return this.heap.slice(0, k).map(item => item.fandom);
+    }
+}
+
 if (document.readyState !== 'loading') {
     scrapeKudosFromPage()
     addMyKudosToMenu()
@@ -6,6 +66,43 @@ if (document.readyState !== 'loading') {
     document.addEventListener('DOMContentLoaded', scrapeKudosFromPage);
     document.addEventListener('DOMContentLoaded', addMyKudosToMenu);
     document.addEventListener('DOMContentLoaded', updateUsername);
+}
+
+let categoryHeaps = {
+    fandoms: new MaxHeap(),
+    characters: new MaxHeap(),
+    relationships: new MaxHeap(),
+    additionalTags: new MaxHeap()
+};
+
+chrome.storage.session.get(["categoryHeaps"], function (result) {
+    if (result.categoryHeaps) {
+        categoryHeaps.fandoms.heap = result.categoryHeaps.fandoms || [];
+        categoryHeaps.characters.heap = result.categoryHeaps.characters || [];
+        categoryHeaps.relationships.heap = result.categoryHeaps.relationships || [];
+        categoryHeaps.additionalTags.heap = result.categoryHeaps.additionalTags || []
+    }
+});
+
+function updateCategoryHeap(category, items) {
+    if (Array.isArray(items)) {
+        items.forEach(item => {
+            categoryHeaps[category].insertOrUpdate(item, 1);
+        });
+    } else {
+        categoryHeaps[category].insertOrUpdate(items, 1);
+    }
+
+    // Save the updated heaps to session storage
+    console.log(categoryHeaps)
+    chrome.storage.session.set({
+        categoryHeaps: {
+            fandoms: categoryHeaps.fandoms.heap,
+            characters: categoryHeaps.characters.heap,
+            relationships: categoryHeaps.relationships.heap,
+            additionalTags: categoryHeaps.additionalTags.heap
+        }
+    });
 }
 
 function iterateThroughChildren(htmlCollection){
@@ -79,6 +176,10 @@ function scrapeKudosFromPage(){
             updateFilterStorage(ficObject, propertiesObject)
             // console.log("test")
             updateSortByStorage(ficName, ficObject, statsObject)
+            updateCategoryHeap("fandoms", propertiesObject.ficFandom);
+            updateCategoryHeap("characters", propertiesObject.ficCharacters);
+            updateCategoryHeap("relationships", propertiesObject.ficRelationships);
+            updateCategoryHeap("aditionalTags", properties.ficTags)
         })
     }
 }
@@ -130,22 +231,23 @@ function updateFilterStorage(ficObject, propertiesObject){
 
 function iterateOrAdd(ficProperties, ficContent, result, ficString, resultString){
     let combinedObj = {}
-    // console.log("iterateOrAdd")
-    let propertyValue = ficProperties[ficString] // arcane // [angst, romance, slow burn]
+    let propertyValue = ficProperties[ficString] 
+
     if (typeof propertyValue === "string"){
         
         combinedObj = addNewFicToObject(propertyValue, ficContent, result, ficString, resultString)
     } else {
         for (let i = 0; i < propertyValue.length; i++) {
-            let ficPropertyValue = propertyValue[i]; // angst // romance // slow burn
-            // console.log(ficPropertyValue)
+            let ficPropertyValue = propertyValue[i]; 
+            
             combinedObj = { ...combinedObj, ...addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resultString)}
-            // debugger
         }
     }
-    // debugger
-    // console.log(combinedObj)
     return combinedObj
+}
+
+function counter(){
+
 }
 
 function addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resultString){
@@ -166,33 +268,103 @@ function addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resu
         
     } else{
         let fic = {}
-        fic[ficName] = ficContent // {name: fic}
-
-        // let property = {}
-        resultProperty[ficPropertyValue] = fic // {arcane: {name:fic}} 
-
+        fic[ficName] = ficContent 
+        resultProperty[ficPropertyValue] = fic 
     }
 
-    return resultProperty // {fandom: fandom1: fic1} tags: tag1
+    chrome.storage.session.get(["counter"]) // {fandom: [{arcane: 1}, {the 100: 2}]} 
+
+    return resultProperty
 }
 
 function updateSortByStorage(ficName, ficObject, statsObject){
-    // kudos 
-    // wordCount
 
-    chrome.storage.session.get(["toSort"], function (result) {
+    chrome.storage.session.get(["sortBy"], function (result) { 
         let newObject = {}
+        let elementToAddKudos = {}
 
-        // result.toSort.kudos
+        let numberKudos = Number(statsObject["Kudos:"].replace(",", ""))
+        elementToAddKudos[ficName] = numberKudos
 
-        chrome.storage.session.set({ toSort: newObject });
+        if (typeof result.sortBy !== "undefined" && result.sortBy.kudos){
+            let newArr = addElementSorted(elementToAddKudos, result.sortBy.kudos)
+            newObject["kudos"] = newArr
+        } else {
+            newObject["kudos"] = [elementToAddKudos]
+        }
+        
+        let elementToAddWordCount = {}
+        let wordCount = Number(statsObject["Words:"].replace(",", ""))
+        elementToAddWordCount[ficName] = wordCount
+
+        if (typeof result.sortBy !== "undefined" && result.sortBy.words) {
+            let newArr = addElementSorted(elementToAddWordCount, result.sortBy.words)
+            newObject["words"] = newArr
+        } else {
+            newObject["words"] = [elementToAddWordCount]
+        }
+
+        let elementToAddHits = {}
+        let hits = Number(statsObject["Hits:"].replace(",", ""))
+        elementToAddHits[ficName] = hits
+
+        if (typeof result.sortBy !== "undefined" && result.sortBy.words) {
+            let newArr = addElementSorted(elementToAddHits, result.sortBy.words)
+            newObject["hits"] = newArr
+        } else {
+            newObject["hits"] = [elementToAddHits]
+        }
+
+
+        chrome.storage.session.set({ sortBy: newObject });
     })
 
 }
 
-function binarySearch(element, array){
+function addElementSorted(element, array) {
+    // console.log("addElementSorted")
+    let loc = Math.abs(binarySearchLocation(array, element, 0, array.length));
+    // debugger
+    let beginingOfArray = array.splice(0, loc)
+    beginingOfArray.push(element)
 
-    return sorted 
+    return beginingOfArray.concat(array)
+}
+
+function binarySearchLocation(array, item, low, high) {
+    // console.log("binary")
+    let itemName = Object.keys(item)[0]
+    let itemValue = item[itemName]
+
+    if (high <= low) {
+        if (array[low]){
+            let arrayElementName = Object.keys(array[low])[0]
+            let element = array[low]
+            return (itemValue > element[arrayElementName]) ? (low + 1) : low;
+        } else {
+            return low
+        }
+        
+    }
+
+    mid = Math.floor((low + high) / 2);
+
+    let arrayMidElementName = Object.keys(array[mid])[0]
+    let element = array[mid]
+    // debugger
+    if (itemValue == element[arrayMidElementName]){
+        return mid + 1;
+    }
+       
+
+    if (itemValue > element[arrayMidElementName]){
+        return binarySearchLocation(array, item,
+            mid + 1, high);
+    }
+        
+
+    return binarySearchLocation(array, item, low,
+        mid - 1);
 }
 
 function addMyKudosToMenu(){
