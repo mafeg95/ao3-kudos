@@ -16,6 +16,25 @@ window.addEventListener('load', function(){
             });
         }
     })
+    
+    // chrome.storage.session.get(['fandoms'], function (result) {
+    //     debugger
+    //     if (result.fandomHeap) populateFilters('fandom', result.fandomHeap);
+    //     if (result.characterHeap) populateFilters('characters', result.characterHeap);
+    //     if (result.relationshipHeap) populateFilters('relationships', result.relationshipHeap);
+    //     if (result.tagHeap) populateFilters('freeforms', result.tagHeap);
+    // });
+
+    chrome.storage.session.get(["categoryHeaps"], function (result) {
+        // debugger
+        // result.categoryHeaps.fandoms
+        if (result.categoryHeaps.fandoms) populateFilters('fandom', result.categoryHeaps.fandoms);
+        if (result.categoryHeaps.characters) populateFilters('character', result.categoryHeaps.characters);
+        if (result.categoryHeaps.relationships) populateFilters('relationship', result.categoryHeaps.relationships);
+        if (result.categoryHeaps.additionalTags) populateFilters('freeform', result.categoryHeaps.additionalTags);
+    });
+
+    addToggleListeners();
 })
 
 
@@ -110,4 +129,80 @@ function fixStaticLinks(user) {
     // change the text of the dropdown menu
     let dropdown = document.querySelector(".dropdown > a")
     dropdown.textContent = dropdown.textContent.replace("username", user)
+}
+
+{/* <li>
+    <label for="include_kudos_search_fandom">
+        <input type="checkbox" name="include_bookmark_search[fandom_ids][]"
+            id="include_kudos_search_fandom" />
+        <span class="indicator" aria-hidden="true"></span><span>Harry Potter - J. K. Rowling
+            (50)</span>
+    </label>
+</li> */}
+
+
+function populateFilters(category, heap, limit = 10) {
+    // Get the corresponding list element
+    // debugger
+    const filterList = document.querySelector(`dd.expandable.${category} > ul`);
+    // debugger
+    // Extract the top 'limit' items from the heap
+    const topCategories = [];
+    for (let i = 0; i < limit && heap.length > 0; i++) {
+        topCategories.push(heap.pop()); // Remove the max element
+    }
+
+    // Populate the filter list
+    topCategories.forEach(item => {
+        // debugger
+        const [name, count] = [item.category, item.count];
+        const listItem = document.createElement('li');
+        const label = document.createElement('label');
+        const span = document.createElement('span');
+        const indicator = document.createElement('span');
+
+        // label.href = `#`; // Replace with the actual filter logic URL
+        const input = document.createElement('input');
+        input.type = "checkbox"
+        input.className = `include_kudos_search_${category}`
+
+        indicator.className = "indicator"
+        // indicator.setAttribute("aria-hidden", true) 
+            // < span class="indicator" aria - hidden="true" ></span >
+        span.textContent = `${name} (${count})`;
+        label.appendChild(input)
+        label.appendChild(indicator)
+        label.appendChild(span)
+
+        listItem.appendChild(label);
+        filterList.appendChild(listItem);
+        
+    });
+
+}
+
+function addToggleListeners(){
+    // debugger
+    let buttons = document.getElementsByClassName("filter-toggle")
+
+    for (let i = 0; i < buttons.length; i++) {
+        const button = buttons[i];
+        // debugger
+        button.addEventListener("click", function () {
+            // debugger
+            let value = button.querySelector("span").getAttribute("value")
+            let list = document.querySelector(`.${value} > ul`)
+            // debugger
+            if (list.className.indexOf("hidden") !== -1) {
+                // debugger
+                list.className = list.className.replace("hidden", "shown")
+                button.className = button.className.replace("collapsed", "expanded")
+            } else {
+                list.className = list.className.replace("shown", "hidden")
+                button.className = button.className.replace("expanded", "collapsed")
+            }
+            // debugger
+        })
+    }
+
 }

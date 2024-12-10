@@ -179,7 +179,7 @@ function scrapeKudosFromPage(){
             updateCategoryHeap("fandoms", propertiesObject.ficFandom);
             updateCategoryHeap("characters", propertiesObject.ficCharacters);
             updateCategoryHeap("relationships", propertiesObject.ficRelationships);
-            updateCategoryHeap("aditionalTags", properties.ficTags)
+            updateCategoryHeap("aditionalTags", propertiesObject.ficTags)
         })
     }
 }
