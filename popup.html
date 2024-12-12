@@ -110,7 +110,7 @@
                 </ul>
             </div>
             <!--filters subnav-->
-            <form class="narrow-hidden filters" id="bookmark-filters" action="/bookmarks" accept-charset="UTF-8" method="get">
+            <form class="narrow-hidden filters" id="kudos-filters" action="/kudos" accept-charset="UTF-8" method="get">
                 <h3 class="landmark heading">Filters</h3>
                 <fieldset>
                     <legend>Filter results:</legend>
@@ -120,12 +120,13 @@
                             <input type="submit" name="commit" value="Sort and Filter" />
                         </dd>
                         <dt class="sort">
-                            <label for="bookmark_search_sort_column">Sort by</label>
+                            <label for="kudos_search_sort_column">Sort by</label>
                         </dt>
                         <dd class="sort">
-                            <select name="bookmark_search[sort_column]" id="bookmark_search_sort_column">
-                                <option value="created_at">Date Bookmarked</option>
-                                <option value="bookmarkable_date">Date Updated</option>
+                            <select name="kudos_search[sort_column]" id="kudos_search_sort_column">
+                                <option value="kudos">Kudos</option>
+                                <option value="word_count">Word Count</option>
+                                <option value="word_count">Hits</option>
                             </select>
                         </dd>
             
@@ -133,9 +134,6 @@
                             <h4 class="heading">
                                 Include
                             </h4>
-                            <a class="help symbol question modal" title="Bookmark filters include tags"
-                                href="/help/bookmark-filters-include-tags.html"><span
-                                    class="symbol question"><span>?</span></span></a>
                         </dt>
                         <dd class="include tags group">
                             <dl>
@@ -333,10 +331,6 @@
                     </p>
             
                     <div>
-            
-            
-            
-            
                         <input type="hidden" name="user_id" id="user_id" value="mafeg95" class="text" autocomplete="off" />
                     </div>
                 </fieldset>

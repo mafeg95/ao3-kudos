@@ -52,9 +52,13 @@ class MaxHeap {
         }
     }
 
-    getTopFandoms(k) {
+    getTopCategory(k) {
         // Return top k elements
-        return this.heap.slice(0, k).map(item => item.fandom);
+        // debugger
+        return this.heap.slice(0, k).map(item => {
+            // debugger
+            return item.category
+        });
     }
 }
 
@@ -176,10 +180,11 @@ function scrapeKudosFromPage(){
             updateFilterStorage(ficObject, propertiesObject)
             // console.log("test")
             updateSortByStorage(ficName, ficObject, statsObject)
+
             updateCategoryHeap("fandoms", propertiesObject.ficFandom);
             updateCategoryHeap("characters", propertiesObject.ficCharacters);
             updateCategoryHeap("relationships", propertiesObject.ficRelationships);
-            updateCategoryHeap("aditionalTags", propertiesObject.ficTags)
+            updateCategoryHeap("additionalTags", propertiesObject.ficTags)
         })
     }
 }
@@ -222,7 +227,7 @@ function updateFilterStorage(ficObject, propertiesObject){
         newObject["characters"] = charactersObject
 
         let tagsObject = iterateOrAdd(propertiesObject, ficObject, result, "ficTags", "tags")
-        newObject["tags"] = tagsObject
+        newObject["additionalTags"] = tagsObject
 
         chrome.storage.session.set({ filterObject: newObject});
     })
@@ -322,9 +327,7 @@ function updateSortByStorage(ficName, ficObject, statsObject){
 }
 
 function addElementSorted(element, array) {
-    // console.log("addElementSorted")
     let loc = Math.abs(binarySearchLocation(array, element, 0, array.length));
-    // debugger
     let beginingOfArray = array.splice(0, loc)
     beginingOfArray.push(element)
 
@@ -332,7 +335,6 @@ function addElementSorted(element, array) {
 }
 
 function binarySearchLocation(array, item, low, high) {
-    // console.log("binary")
     let itemName = Object.keys(item)[0]
     let itemValue = item[itemName]
 
@@ -351,7 +353,7 @@ function binarySearchLocation(array, item, low, high) {
 
     let arrayMidElementName = Object.keys(array[mid])[0]
     let element = array[mid]
-    // debugger
+
     if (itemValue == element[arrayMidElementName]){
         return mid + 1;
     }
