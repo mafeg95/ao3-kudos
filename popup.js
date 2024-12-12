@@ -44,6 +44,7 @@ window.addEventListener('load', function () {
     // Load category heaps and populate filters
     chrome.storage.session.get(["categoryHeaps"], function (result) {
         if (result.categoryHeaps.fandoms) populateFilters('fandom', result.categoryHeaps.fandoms);
+        debugger
         if (result.categoryHeaps.characters) populateFilters('character', result.categoryHeaps.characters);
         if (result.categoryHeaps.relationships) populateFilters('relationship', result.categoryHeaps.relationships);
         if (result.categoryHeaps.additionalTags) populateFilters('freeform', result.categoryHeaps.additionalTags);
@@ -316,13 +317,16 @@ function fixStaticLinks(user) {
     dropdown.textContent = dropdown.textContent.replace("username", user)
 }
 
-function populateFilters(category, heap, limit = 10) {
+function populateFilters(category, array, limit = 10) {
     // Get the corresponding list element
     const filterList = document.querySelector(`dd.expandable.${category} > ul`);
     // Extract the top 'limit' items from the heap
     const topCategories = [];
-    for (let i = 0; i < limit && heap.length > 0; i++) {
-        topCategories.push(heap.shift()); // Remove the max element
+    let categoryHeap = new MaxHeap()
+    categoryHeap.heap = array
+    debugger
+    for (let i = 0; i < limit && categoryHeap.heap.length > 0; i++) {
+        topCategories.push(categoryHeap.extractMax()); // Remove the max element
     }
 
     // Populate the filter list

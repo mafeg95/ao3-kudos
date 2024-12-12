@@ -1,67 +1,3 @@
-class MaxHeap {
-    constructor() {
-        this.heap = [];
-    }
-
-    // Helper functions
-    parent(i) { return Math.floor((i - 1) / 2); }
-    left(i) { return 2 * i + 1; }
-    right(i) { return 2 * i + 2; }
-
-    // Insert or update an existing fandom
-    insertOrUpdate(category, count) {
-        let index = this.heap.findIndex(item => {
-            // debugger
-            return item.category === category
-        });
-
-        if (index !== -1) {
-            // Update count if fandom exists
-            this.heap[index].count += count;
-            this.bubbleUp(index);
-            this.bubbleDown(index);
-        } else {
-            // Insert new fandom
-            this.heap.push({ category, count });
-            this.bubbleUp(this.heap.length - 1);
-        }
-    }
-
-    bubbleUp(index) {
-        while (index > 0 && this.heap[index].count > this.heap[this.parent(index)].count) {
-            [this.heap[index], this.heap[this.parent(index)]] =
-                [this.heap[this.parent(index)], this.heap[index]];
-            index = this.parent(index);
-        }
-    }
-
-    bubbleDown(index) {
-        let largest = index;
-        const left = this.left(index);
-        const right = this.right(index);
-
-        if (left < this.heap.length && this.heap[left].count > this.heap[largest].count) {
-            largest = left;
-        }
-        if (right < this.heap.length && this.heap[right].count > this.heap[largest].count) {
-            largest = right;
-        }
-        if (largest !== index) {
-            [this.heap[index], this.heap[largest]] = [this.heap[largest], this.heap[index]];
-            this.bubbleDown(largest);
-        }
-    }
-
-    getTopCategory(k) {
-        // Return top k elements
-        // debugger
-        return this.heap.slice(0, k).map(item => {
-            // debugger
-            return item.category
-        });
-    }
-}
-
 if (document.readyState !== 'loading') {
     scrapeKudosFromPage()
     addMyKudosToMenu()
@@ -335,38 +271,39 @@ function addElementSorted(element, array) {
 }
 
 function binarySearchLocation(array, item, low, high) {
-    let itemName = Object.keys(item)[0]
-    let itemValue = item[itemName]
+    let itemName = Object.keys(item)[0];
+    let itemValue = item[itemName];
 
     if (high <= low) {
-        if (array[low]){
-            let arrayElementName = Object.keys(array[low])[0]
-            let element = array[low]
-            return (itemValue > element[arrayElementName]) ? (low + 1) : low;
+        if (array[low]) {
+            let arrayElementName = Object.keys(array[low])[0];
+            let elementValue = array[low][arrayElementName];
+            // For descending order:
+            // If the new item is greater, insert before the current low element.
+            return (itemValue > elementValue) ? low : (low + 1);
         } else {
-            return low
+            return low;
         }
-        
     }
 
-    mid = Math.floor((low + high) / 2);
+    let mid = Math.floor((low + high) / 2);
 
-    let arrayMidElementName = Object.keys(array[mid])[0]
-    let element = array[mid]
+    let arrayMidElementName = Object.keys(array[mid])[0];
+    let elementValue = array[mid][arrayMidElementName];
 
-    if (itemValue == element[arrayMidElementName]){
+    if (itemValue === elementValue) {
+        // If equal, we insert after the found position to maintain stability.
         return mid + 1;
     }
-       
 
-    if (itemValue > element[arrayMidElementName]){
-        return binarySearchLocation(array, item,
-            mid + 1, high);
+    // For descending order:
+    // If itemValue is greater, move left to find the correct insertion point.
+    if (itemValue > elementValue) {
+        return binarySearchLocation(array, item, low, mid - 1);
     }
-        
 
-    return binarySearchLocation(array, item, low,
-        mid - 1);
+    // If itemValue is smaller, move right.
+    return binarySearchLocation(array, item, mid + 1, high);
 }
 
 function addMyKudosToMenu(){

@@ -9,6 +9,7 @@
                 "https://*.archiveofourown.org/*"
             ], 
             "js": [
+                "maxHeap.js",
                 "scripts/content.js"
             ]
         }
