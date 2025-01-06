@@ -1,38 +1,12 @@
-// window.addEventListener('load', function(){
-
-//     let fics = document.getElementById("fics")
-
-
-//     chrome.storage.session.get(["username"], function (result) { 
-//         fixStaticLinks(result.username)
-//     })
-
-//     chrome.storage.session.get(["storedFics"], function (result) { // not quite working
-//         if (typeof result.storedFics !== "undefined" && result.storedFics !== null){
-//             let keys = Object.keys(result.storedFics)
-//             keys.forEach(fic => {
-//                 let createdFic = createElementsFromArray(result.storedFics[fic])
-//                 fics.appendChild(createdFic)
-//             });
-//         }
-//     })
-
-//     chrome.storage.session.get(["categoryHeaps"], function (result) {
-//         if (result.categoryHeaps.fandoms) populateFilters('fandom', result.categoryHeaps.fandoms);
-//         if (result.categoryHeaps.characters) populateFilters('character', result.categoryHeaps.characters);
-//         if (result.categoryHeaps.relationships) populateFilters('relationship', result.categoryHeaps.relationships);
-//         if (result.categoryHeaps.additionalTags) populateFilters('freeform', result.categoryHeaps.additionalTags);
-//     });
-
-//     addToggleListeners();
-// })
-
 window.addEventListener('load', function () {
     let fics = document.getElementById("fics")
 
     chrome.storage.session.get(["username"], function (result) {
         fixStaticLinks(result.username)
     })
+
+    const clearButton = document.getElementById("clear-filters-button");
+    clearButton.addEventListener("click", clearAllFilters);
 
     // Load stored fics
     chrome.storage.session.get(["storedFics"], function (result) {
@@ -44,7 +18,7 @@ window.addEventListener('load', function () {
     // Load category heaps and populate filters
     chrome.storage.session.get(["categoryHeaps"], function (result) {
         if (result.categoryHeaps.fandoms) populateFilters('fandom', result.categoryHeaps.fandoms);
-        debugger
+        // debugger
         if (result.categoryHeaps.characters) populateFilters('character', result.categoryHeaps.characters);
         if (result.categoryHeaps.relationships) populateFilters('relationship', result.categoryHeaps.relationships);
         if (result.categoryHeaps.additionalTags) populateFilters('freeform', result.categoryHeaps.additionalTags);
@@ -52,23 +26,28 @@ window.addEventListener('load', function () {
 
     // Add toggle listeners for collapsing/expanding filter sections
     addToggleListeners();
-    // debugger
     // Handle filter form submission
     const filterForm = document.getElementById("kudos-filters");
     filterForm.addEventListener("submit", function (e) {
         e.preventDefault();
-        // debugger
-        // Determine filtering mode
-        // For demonstration, let's say we have a radio button or a toggle to select mode:
-        // If you have no such toggle yet, you could add one. For now, we'll assume "all" mode.
-        let filterMode = "alls";
-        // If you want to toggle between modes, you can add a radio button or a checkbox in popup.html 
-        // and read its value here.
-        // debugger
-        applyFilters(filterMode);
+        applyFilters();
     });
 
 }); // end of 
+
+
+function clearAllFilters() {
+    // Uncheck all filter checkboxes
+    const allCheckboxes = document.querySelectorAll("input[type='checkbox'].include_kudos_search_fandom, input[type='checkbox'].include_kudos_search_character, input[type='checkbox'].include_kudos_search_relationship, input[type='checkbox'].include_kudos_search_freeform");
+
+    allCheckboxes.forEach(cb => {
+        cb.checked = false;
+    });
+
+    // Now re-apply filters with none selected
+    applyFilters(); // This should revert to showing all fics or the default view
+}
+
 function displayFics(storedFics) {
     fics.innerHTML = "";
     let keys = Object.keys(storedFics)
@@ -80,33 +59,33 @@ function displayFics(storedFics) {
 
 function applyFilters(mode = "all") {
     // Get selected filters
-    // debugger
     let selectedFilters = getSelectedFilters();
 
     let sortSelect = document.getElementById("kudos_search_sort_column");
     let chosenSort = sortSelect.value;
     // Retrieve filterObject and storedFics from storage
-    chrome.storage.session.get(["filterObject", "storedFics", "sortBy"], function (result) {
+    chrome.storage.session.get(["filterObject", "storedFics", "sortBy", "username"], function (result) {
         const filterObject = result.filterObject || {};
         const ficsObject = result.storedFics || {};
         const sortBy = result.sortBy || {};
-        // debugger
+        const username = result.username
+        debugger
         let filteredFics;
         if (mode === "all") {
             filteredFics = filterFicsConformToAll(selectedFilters, filterObject, ficsObject);
         } else {
             filteredFics = filterFicsConformToAny(selectedFilters, filterObject, ficsObject);
         }
-
+        // debugger
         if (chosenSort && sortBy[chosenSort]) {
             filteredFics = sortFilteredFics(filteredFics, sortBy[chosenSort]);
         }
         // Update display
         fics.innerHTML = "";
         if (filteredFics.length === 0) {
-            const noFicsDiv = document.createElement("div");
-            noFicsDiv.className = "no-fics-message";
-            noFicsDiv.textContent = "No Fics";
+            const noFicsDiv = document.createElement("h2");
+            noFicsDiv.className = "no-fics-message heading";
+            noFicsDiv.textContent = `0 Kudos by ${username}`;
             fics.appendChild(noFicsDiv);
         } else {
             filteredFics.forEach(fic => {
@@ -324,7 +303,7 @@ function populateFilters(category, array, limit = 10) {
     const topCategories = [];
     let categoryHeap = new MaxHeap()
     categoryHeap.heap = array
-    debugger
+    // debugger
     for (let i = 0; i < limit && categoryHeap.heap.length > 0; i++) {
         topCategories.push(categoryHeap.extractMax()); // Remove the max element
     }

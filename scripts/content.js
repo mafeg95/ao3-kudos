@@ -249,8 +249,8 @@ function updateSortByStorage(ficName, ficObject, statsObject){
         let hits = Number(statsObject["Hits:"].replace(",", ""))
         elementToAddHits[ficName] = hits
 
-        if (typeof result.sortBy !== "undefined" && result.sortBy.words) {
-            let newArr = addElementSorted(elementToAddHits, result.sortBy.words)
+        if (typeof result.sortBy !== "undefined" && result.sortBy.hits) {
+            let newArr = addElementSorted(elementToAddHits, result.sortBy.hits)
             newObject["hits"] = newArr
         } else {
             newObject["hits"] = [elementToAddHits]
