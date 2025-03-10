@@ -5,13 +5,15 @@ chrome.runtime.onMessage.addListener(
         if (request.action === "MyKudos") {
             openTab("popup.html")
         } else if (request.action === "kudosUpdated") {
-            // Broadcast to all tabs that kudos were updated
+            // Only broadcast to AO3 tabs and extension pages
             chrome.tabs.query({}, function(tabs) {
                 tabs.forEach(function(tab) {
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "refreshKudos",
-                        data: request.data
-                    });
+                    if (tab.url && (tab.url.includes('archiveofourown.org') || tab.url.includes('chrome-extension://'))) {
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "refreshKudos",
+                            data: request.data
+                        }).catch(() => {});
+                    }
                 });
             });
         }
