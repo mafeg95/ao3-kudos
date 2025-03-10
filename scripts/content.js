@@ -1,3 +1,15 @@
+// Listen for kudos updates from other tabs
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "refreshKudos") {
+        console.log('Received kudos update from another tab:', request.data.ficName);
+        // Refresh heaps from the updated data
+        categoryHeaps.fandoms.refreshFromStorage(request.data.categoryHeaps.fandoms);
+        categoryHeaps.characters.refreshFromStorage(request.data.categoryHeaps.characters);
+        categoryHeaps.relationships.refreshFromStorage(request.data.categoryHeaps.relationships);
+        categoryHeaps.additionalTags.refreshFromStorage(request.data.categoryHeaps.additionalTags);
+    }
+});
+
 if (document.readyState !== 'loading') {
     scrapeKudosFromPage()
     addMyKudosToMenu()
@@ -16,25 +28,46 @@ let categoryHeaps = {
 };
 
 chrome.storage.session.get(["categoryHeaps"], function (result) {
+    console.log('=== Loading stored category heaps ===');
     if (result.categoryHeaps) {
         categoryHeaps.fandoms.heap = result.categoryHeaps.fandoms || [];
         categoryHeaps.characters.heap = result.categoryHeaps.characters || [];
         categoryHeaps.relationships.heap = result.categoryHeaps.relationships || [];
         categoryHeaps.additionalTags.heap = result.categoryHeaps.additionalTags || []
+        
+        console.log('Loaded heap states:');
+        console.log('Fandoms:', JSON.stringify(categoryHeaps.fandoms.heap, null, 2));
+        console.log('Characters:', JSON.stringify(categoryHeaps.characters.heap, null, 2));
+        console.log('Relationships:', JSON.stringify(categoryHeaps.relationships.heap, null, 2));
+        console.log('Additional Tags:', JSON.stringify(categoryHeaps.additionalTags.heap, null, 2));
+    } else {
+        console.log('No stored heaps found, starting fresh');
     }
 });
 
 function updateCategoryHeap(category, items) {
-    if (Array.isArray(items)) {
-        items.forEach(item => {
-            categoryHeaps[category].insertOrUpdate(item, 1);
-        });
-    } else {
-        categoryHeaps[category].insertOrUpdate(items, 1);
+    console.log(`\n=== Updating ${category} heap ===`);
+    console.log('Current heap state:', JSON.stringify(categoryHeaps[category].heap, null, 2));
+    console.log('New items to process:', items);
+
+    if (!Array.isArray(items)) {
+        console.warn(`updateCategoryHeap received non-array items for category: ${category}`, items);
+        return;
     }
 
+    if (items.length === 0) {
+        console.warn(`updateCategoryHeap received empty array for category: ${category}`);
+        return;
+    }
+
+    items.forEach(item => {
+        console.log(`Processing item: ${item}`);
+        categoryHeaps[category].insertOrUpdate(item, 1);
+    });
+
+    console.log('Updated heap state:', JSON.stringify(categoryHeaps[category].heap, null, 2));
+
     // Save the updated heaps to session storage
-    console.log(categoryHeaps)
     chrome.storage.session.set({
         categoryHeaps: {
             fandoms: categoryHeaps.fandoms.heap,
@@ -45,8 +78,19 @@ function updateCategoryHeap(category, items) {
     });
 }
 
-function iterateThroughChildren(htmlCollection){
+
+function iterateThroughChildren(htmlCollection, selector){
     let stringArray = []
+
+    if (!htmlCollection) {
+        console.warn(`Query selector returned null/undefined: ${selector}`);
+        return stringArray;
+    }
+
+    if (htmlCollection.length === 0) {
+        console.warn(`Query selector returned empty collection: ${selector}`);
+        return stringArray;
+    }
 
     for (let i = 0; i < htmlCollection.length; i++) {
         const element = htmlCollection[i];
@@ -77,23 +121,33 @@ function scrapeKudosFromPage(){
 
             let ficName = document.getElementsByClassName("title heading")[0].textContent.trim() || ''
 
-            ficObject["ficWarnings"] = document.querySelector("dd.warning.tags > ul").innerHTML.trim() || ''
-            propertiesObject["ficWarnings"] = iterateThroughChildren(document.querySelector("dd.warning.tags > ul").children)
+            const selectors = {
+                ficWarnings: "dd.warning.tags > ul",
+                ficCategories: "dd.category.tags > ul",
+                ficFandom: "dd.fandom.tags > ul",
+                ficRelationships: "dd.relationship.tags > ul",
+                ficCharacters: "dd.character.tags > ul",
+                ficTags: "dd.freeform.tags > ul"
+            };
 
-            ficObject["ficCategories"] = document.querySelector("dd.category.tags > ul").innerHTML.trim() || ''
-            propertiesObject["ficCategories"] = iterateThroughChildren(document.querySelector("dd.category.tags > ul").children)
+            // Helper to get element and handle potential null
+            const getElement = (selector) => {
+                const element = document.querySelector(selector);
+                return element || null;
+            };
 
-            ficObject["ficFandom"] = document.querySelector("dd.fandom.tags > ul").innerHTML.trim() || ''
-            propertiesObject["ficFandom"] = iterateThroughChildren(document.querySelector("dd.fandom.tags > ul").children)
+            console.log('=== Processing new kudos ===');
+            console.log('Fic title:', ficName);
 
-            ficObject["ficRelationships"] = document.querySelector("dd.relationship.tags > ul").innerHTML.trim() || ''
-            propertiesObject["ficRelationships"] = iterateThroughChildren(document.querySelector("dd.relationship.tags > ul").children)
-
-            ficObject["ficCharacters"] = document.querySelector("dd.character.tags > ul").innerHTML.trim() || ''
-            propertiesObject["ficCharacters"] = iterateThroughChildren(document.querySelector("dd.character.tags > ul").children)
-
-            ficObject["ficTags"] = document.querySelector("dd.freeform.tags > ul").innerHTML.trim() || ''
-            propertiesObject["ficTags"] = iterateThroughChildren(document.querySelector("dd.freeform.tags > ul").children)
+            // Process each selector
+            Object.entries(selectors).forEach(([key, selector]) => {
+                const element = getElement(selector);
+                ficObject[key] = element ? element.innerHTML.trim() : '';
+                propertiesObject[key] = iterateThroughChildren(element?.children, selector);
+                
+                // Log the tags found for this category
+                console.log(`${key} tags found:`, propertiesObject[key]);
+            });
 
             ficObject["ficLanguage"] = document.querySelector("dd.language").innerHTML.trim() || ''
 
@@ -114,13 +168,38 @@ function scrapeKudosFromPage(){
 
             updateFicStorage(ficName, ficObject)
             updateFilterStorage(ficObject, propertiesObject)
-            // console.log("test")
             updateSortByStorage(ficName, ficObject, statsObject)
 
-            updateCategoryHeap("fandoms", propertiesObject.ficFandom);
-            updateCategoryHeap("characters", propertiesObject.ficCharacters);
-            updateCategoryHeap("relationships", propertiesObject.ficRelationships);
-            updateCategoryHeap("additionalTags", propertiesObject.ficTags)
+            // First refresh heaps from storage
+            chrome.storage.session.get(["categoryHeaps"], function(result) {
+                if (result.categoryHeaps) {
+                    console.log('Refreshing heaps before update');
+                    categoryHeaps.fandoms.refreshFromStorage(result.categoryHeaps.fandoms || []);
+                    categoryHeaps.characters.refreshFromStorage(result.categoryHeaps.characters || []);
+                    categoryHeaps.relationships.refreshFromStorage(result.categoryHeaps.relationships || []);
+                    categoryHeaps.additionalTags.refreshFromStorage(result.categoryHeaps.additionalTags || []);
+                }
+
+                // Then update with new data
+                updateCategoryHeap("fandoms", propertiesObject.ficFandom);
+                updateCategoryHeap("characters", propertiesObject.ficCharacters);
+                updateCategoryHeap("relationships", propertiesObject.ficRelationships);
+                updateCategoryHeap("additionalTags", propertiesObject.ficTags);
+
+                // Notify other tabs about the update
+                chrome.runtime.sendMessage({
+                    action: "kudosUpdated",
+                    data: {
+                        ficName,
+                        categoryHeaps: {
+                            fandoms: categoryHeaps.fandoms.heap,
+                            characters: categoryHeaps.characters.heap,
+                            relationships: categoryHeaps.relationships.heap,
+                            additionalTags: categoryHeaps.additionalTags.heap
+                        }
+                    }
+                });
+            });
         })
     }
 }

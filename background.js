@@ -2,9 +2,18 @@ chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONT
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        
-        if (request.action === "MyKudos"){
+        if (request.action === "MyKudos") {
             openTab("popup.html")
+        } else if (request.action === "kudosUpdated") {
+            // Broadcast to all tabs that kudos were updated
+            chrome.tabs.query({}, function(tabs) {
+                tabs.forEach(function(tab) {
+                    chrome.tabs.sendMessage(tab.id, {
+                        action: "refreshKudos",
+                        data: request.data
+                    });
+                });
+            });
         }
     }
 );

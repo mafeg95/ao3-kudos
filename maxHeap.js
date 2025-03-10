@@ -2,6 +2,15 @@ class MaxHeap {
     constructor() {
         this.heap = [];
         this.insertionOrder = 0; // Track how many items have been inserted
+        this.categories = new Set(); // Track unique categories
+    }
+
+    // Method to refresh heap from storage
+    refreshFromStorage(heapData) {
+        if (!Array.isArray(heapData)) return;
+        this.heap = heapData;
+        this.categories = new Set(heapData.map(item => item.category));
+        this.insertionOrder = Math.max(...heapData.map(item => item.order), 0);
     }
 
     // Helper functions
@@ -11,18 +20,27 @@ class MaxHeap {
 
     // Insert or update an existing fandom
     insertOrUpdate(category, count) {
-        this.insertionOrder++;
-        let index = this.heap.findIndex(item => item.category === category);
+        if (!category) {
+            console.warn('Attempted to insert/update undefined or null category');
+            return;
+        }
 
-        if (index !== -1) {
+        this.insertionOrder++;
+        
+        // Check if category exists using Set for O(1) lookup
+        if (this.categories.has(category)) {
             // Update existing
+            let index = this.heap.findIndex(item => item.category === category);
+            const oldCount = this.heap[index].count;
             this.heap[index].count += count;
-            // No need to change order since it was inserted before
+            console.log(`Updating count for ${category}: ${oldCount} -> ${this.heap[index].count}`);
             this.bubbleUp(index);
             this.bubbleDown(index);
         } else {
             // Insert new
             let newItem = { category, count, order: this.insertionOrder };
+            console.log(`Adding new category ${category} with count ${count}`);
+            this.categories.add(category); // Add to Set
             this.heap.push(newItem);
             this.bubbleUp(this.heap.length - 1);
         }
