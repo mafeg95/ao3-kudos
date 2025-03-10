@@ -1,3 +1,15 @@
+// Listen for kudos updates from other tabs
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "refreshKudos") {
+        console.log('Popup received kudos update, refreshing filters...');
+        // Refresh filters with new data
+        if (request.data.categoryHeaps.fandoms) populateFilters('fandom', request.data.categoryHeaps.fandoms);
+        if (request.data.categoryHeaps.characters) populateFilters('character', request.data.categoryHeaps.characters);
+        if (request.data.categoryHeaps.relationships) populateFilters('relationship', request.data.categoryHeaps.relationships);
+        if (request.data.categoryHeaps.additionalTags) populateFilters('freeform', request.data.categoryHeaps.additionalTags);
+    }
+});
+
 window.addEventListener('load', function () {
     let fics = document.getElementById("fics")
 
@@ -355,7 +367,8 @@ function addToggleListeners(){
 }
 
 function onSubmitFilter(){
-
+    let selectedFilters = getSelectedFilters()
+    applyFilters(selectedFilters)   
 }
 
 function filterFics(){
