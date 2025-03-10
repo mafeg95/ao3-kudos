@@ -1,7 +1,6 @@
 // Listen for kudos updates from other tabs
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "refreshKudos") {
-        console.log('Popup received kudos update, refreshing data...');
         // First refresh filters with new data
         if (request.data.categoryHeaps.fandoms) populateFilters('fandom', request.data.categoryHeaps.fandoms);
         if (request.data.categoryHeaps.characters) populateFilters('character', request.data.categoryHeaps.characters);
@@ -11,15 +10,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // Then refresh displayed fics
         chrome.storage.session.get(["storedFics"], function(result) {
             if (result.storedFics) {
-                console.log('Refreshing displayed fics...');
                 displayFics(result.storedFics);
             }
         });
     }
 });
 
+// Global reference to the fics container
+let fics;
+
 window.addEventListener('load', function () {
-    let fics = document.getElementById("fics")
+    fics = document.getElementById("fics")
 
     chrome.storage.session.get(["username"], function (result) {
         fixStaticLinks(result.username)
@@ -89,7 +90,7 @@ function applyFilters(mode = "all") {
         const ficsObject = result.storedFics || {};
         const sortBy = result.sortBy || {};
         const username = result.username
-        debugger
+        // debugger
         let filteredFics;
         if (mode === "all") {
             filteredFics = filterFicsConformToAll(selectedFilters, filterObject, ficsObject);

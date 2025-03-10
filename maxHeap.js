@@ -3,6 +3,7 @@ class MaxHeap {
         this.heap = [];
         this.insertionOrder = 0; // Track how many items have been inserted
         this.categories = new Set(); // Track unique categories
+        this.characterRelationships = {}; // Track characters in romantic relationships
     }
 
     // Method to refresh heap from storage
@@ -13,13 +14,28 @@ class MaxHeap {
         this.insertionOrder = Math.max(...heapData.map(item => item.order), 0);
     }
 
+    // Process a relationship tag to update character relationship counts
+    processRelationship(relationship) {
+        if (!relationship || !relationship.includes('/')) return;
+        
+        // Split and clean up character names
+        const characters = relationship.split('/')
+            .map(char => char.trim())
+            .filter(char => char.length > 0);
+
+        // Update counts for each character
+        characters.forEach(char => {
+            this.characterRelationships[char] = (this.characterRelationships[char] || 0) + 1;
+        });
+    }
+
     // Helper functions
     parent(i) { return Math.floor((i - 1) / 2); }
     left(i) { return 2 * i + 1; }
     right(i) { return 2 * i + 2; }
 
-    // Insert or update an existing fandom
-    insertOrUpdate(category, count) {
+    // Insert or update an existing item
+    insertOrUpdate(category, count, options = {}) {
         if (!category) {
             console.warn('Attempted to insert/update undefined or null category');
             return;
@@ -33,13 +49,20 @@ class MaxHeap {
             let index = this.heap.findIndex(item => item.category === category);
             const oldCount = this.heap[index].count;
             this.heap[index].count += count;
-            console.log(`Updating count for ${category}: ${oldCount} -> ${this.heap[index].count}`);
+            // Preserve the type if it was previously set
+            if (options.type) {
+                this.heap[index].type = options.type;
+            }
             this.bubbleUp(index);
             this.bubbleDown(index);
         } else {
             // Insert new
-            let newItem = { category, count, order: this.insertionOrder };
-            console.log(`Adding new category ${category} with count ${count}`);
+            let newItem = { 
+                category, 
+                count, 
+                order: this.insertionOrder,
+                type: options.type // Add type if provided
+            };
             this.categories.add(category); // Add to Set
             this.heap.push(newItem);
             this.bubbleUp(this.heap.length - 1);
@@ -47,10 +70,13 @@ class MaxHeap {
     }
 
     bubbleUp(index) {
-        while (index > 0 && isGreater(this.heap[index], this.heap[this.parent(index)])) {
-            [this.heap[index], this.heap[this.parent(index)]] =
-                [this.heap[this.parent(index)], this.heap[index]];
-            index = this.parent(index);
+        while (index > 0) {
+            const parentIdx = this.parent(index);
+            if (!isGreater(this.heap[index], this.heap[parentIdx], this)) break;
+            
+            // Swap with parent
+            [this.heap[index], this.heap[parentIdx]] = [this.heap[parentIdx], this.heap[index]];
+            index = parentIdx;
         }
     }
 
@@ -59,12 +85,17 @@ class MaxHeap {
         const left = this.left(index);
         const right = this.right(index);
 
-        if (left < this.heap.length && isGreater(this.heap[left], this.heap[largest])) {
+        // Compare with left child
+        if (left < this.heap.length && isGreater(this.heap[left], this.heap[largest], this)) {
             largest = left;
         }
-        if (right < this.heap.length && isGreater(this.heap[right], this.heap[largest])) {
+        
+        // Compare with right child
+        if (right < this.heap.length && isGreater(this.heap[right], this.heap[largest], this)) {
             largest = right;
         }
+
+        // If a child is larger, swap and continue bubbling down
         if (largest !== index) {
             [this.heap[index], this.heap[largest]] = [this.heap[largest], this.heap[index]];
             this.bubbleDown(largest);
@@ -92,9 +123,24 @@ class MaxHeap {
     }
 }
 
-function isGreater(a, b) {
-    if (a.count > b.count) return true;
-    if (a.count < b.count) return false;
-    // If counts are equal, check order
-    return a.order < b.order; // Earlier inserted is considered "greater"
+// Helper function to compare heap items
+function isGreater(a, b, heap) {
+    // For non-character tags, just compare counts
+    if (!a.type || a.type !== 'character') {
+        if (a.count !== b.count) return a.count > b.count;
+        return a.order < b.order;
+    }
+
+    // For character tags, factor in relationship appearances
+    const aRelCount = heap.characterRelationships[a.category] || 0;
+    const bRelCount = heap.characterRelationships[b.category] || 0;
+
+    // First prioritize relationship count
+    if (aRelCount !== bRelCount) return aRelCount > bRelCount;
+
+    // If relationship counts are equal, compare kudos counts
+    if (a.count !== b.count) return a.count > b.count;
+
+    // If everything is equal, use insertion order (earlier items have priority)
+    return a.order < b.order;
 }

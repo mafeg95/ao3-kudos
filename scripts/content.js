@@ -1,7 +1,6 @@
 // Listen for kudos updates from other tabs
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "refreshKudos") {
-        console.log('Received kudos update from another tab:', request.data.ficName);
         // Refresh heaps from the updated data
         categoryHeaps.fandoms.refreshFromStorage(request.data.categoryHeaps.fandoms);
         categoryHeaps.characters.refreshFromStorage(request.data.categoryHeaps.characters);
@@ -28,28 +27,15 @@ let categoryHeaps = {
 };
 
 chrome.storage.session.get(["categoryHeaps"], function (result) {
-    console.log('=== Loading stored category heaps ===');
     if (result.categoryHeaps) {
         categoryHeaps.fandoms.heap = result.categoryHeaps.fandoms || [];
         categoryHeaps.characters.heap = result.categoryHeaps.characters || [];
         categoryHeaps.relationships.heap = result.categoryHeaps.relationships || [];
         categoryHeaps.additionalTags.heap = result.categoryHeaps.additionalTags || []
-        
-        console.log('Loaded heap states:');
-        console.log('Fandoms:', JSON.stringify(categoryHeaps.fandoms.heap, null, 2));
-        console.log('Characters:', JSON.stringify(categoryHeaps.characters.heap, null, 2));
-        console.log('Relationships:', JSON.stringify(categoryHeaps.relationships.heap, null, 2));
-        console.log('Additional Tags:', JSON.stringify(categoryHeaps.additionalTags.heap, null, 2));
-    } else {
-        console.log('No stored heaps found, starting fresh');
     }
 });
 
-function updateCategoryHeap(category, items) {
-    console.log(`\n=== Updating ${category} heap ===`);
-    console.log('Current heap state:', JSON.stringify(categoryHeaps[category].heap, null, 2));
-    console.log('New items to process:', items);
-
+function updateCategoryHeap(category, items, options = {}) {
     if (!Array.isArray(items)) {
         console.warn(`updateCategoryHeap received non-array items for category: ${category}`, items);
         return;
@@ -60,12 +46,19 @@ function updateCategoryHeap(category, items) {
         return;
     }
 
-    items.forEach(item => {
-        console.log(`Processing item: ${item}`);
-        categoryHeaps[category].insertOrUpdate(item, 1);
-    });
+    // If this is a relationships category, process the relationships first
+    if (category === 'relationships') {
+        items.forEach(relationship => {
+            if (relationship.includes('/')) {
+                categoryHeaps[category].processRelationship(relationship);
+            }
+        });
+    }
 
-    console.log('Updated heap state:', JSON.stringify(categoryHeaps[category].heap, null, 2));
+    // Insert or update items in the heap
+    items.forEach(item => {
+        categoryHeaps[category].insertOrUpdate(item, 1, options);
+    });
 
     // Save the updated heaps to session storage
     chrome.storage.session.set({
@@ -136,17 +129,11 @@ function scrapeKudosFromPage(){
                 return element || null;
             };
 
-            console.log('=== Processing new kudos ===');
-            console.log('Fic title:', ficName);
-
             // Process each selector
             Object.entries(selectors).forEach(([key, selector]) => {
                 const element = getElement(selector);
                 ficObject[key] = element ? element.innerHTML.trim() : '';
                 propertiesObject[key] = iterateThroughChildren(element?.children, selector);
-                
-                // Log the tags found for this category
-                console.log(`${key} tags found:`, propertiesObject[key]);
             });
 
             ficObject["ficLanguage"] = document.querySelector("dd.language").innerHTML.trim() || ''
@@ -173,7 +160,7 @@ function scrapeKudosFromPage(){
                     return;
                 }
 
-                console.log('Adding new kudos for:', ficName);
+
                 try {
                     // Wait for all storage operations to complete
                     await Promise.all([
@@ -182,10 +169,14 @@ function scrapeKudosFromPage(){
                         updateSortByStorage(ficName, ficObject, statsObject)
                     ]);
 
-                    // Only update heaps and notify other tabs after storage is updated
-                    updateCategoryHeap("fandoms", propertiesObject.ficFandom);
-                    updateCategoryHeap("characters", propertiesObject.ficCharacters);
+                                    // First process relationships to build up the relationship map
                     updateCategoryHeap("relationships", propertiesObject.ficRelationships);
+                    
+                    // Process characters with relationship information
+                    updateCategoryHeap("characters", propertiesObject.ficCharacters, { type: 'character' });
+                    
+                    // Process other categories normally
+                    updateCategoryHeap("fandoms", propertiesObject.ficFandom);
                     updateCategoryHeap("additionalTags", propertiesObject.ficTags);
 
                     // Notify other tabs about the update
