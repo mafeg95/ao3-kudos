@@ -166,87 +166,105 @@ function scrapeKudosFromPage(){
                 ficObject["ficSummary"] = ""
             }
 
-            updateFicStorage(ficName, ficObject)
-            updateFilterStorage(ficObject, propertiesObject)
-            updateSortByStorage(ficName, ficObject, statsObject)
-
-            // First refresh heaps from storage
-            chrome.storage.session.get(["categoryHeaps"], function(result) {
-                if (result.categoryHeaps) {
-                    console.log('Refreshing heaps before update');
-                    categoryHeaps.fandoms.refreshFromStorage(result.categoryHeaps.fandoms || []);
-                    categoryHeaps.characters.refreshFromStorage(result.categoryHeaps.characters || []);
-                    categoryHeaps.relationships.refreshFromStorage(result.categoryHeaps.relationships || []);
-                    categoryHeaps.additionalTags.refreshFromStorage(result.categoryHeaps.additionalTags || []);
+            // Check if fic is already kudosed and handle all updates
+            chrome.storage.session.get(["storedFics"], async function(result) {
+                if (result.storedFics && result.storedFics[ficName]) {
+                    console.log('Fic already kudosed:', ficName);
+                    return;
                 }
 
-                // Then update with new data
-                updateCategoryHeap("fandoms", propertiesObject.ficFandom);
-                updateCategoryHeap("characters", propertiesObject.ficCharacters);
-                updateCategoryHeap("relationships", propertiesObject.ficRelationships);
-                updateCategoryHeap("additionalTags", propertiesObject.ficTags);
+                console.log('Adding new kudos for:', ficName);
+                try {
+                    // Wait for all storage operations to complete
+                    await Promise.all([
+                        updateFicStorage(ficName, ficObject),
+                        updateFilterStorage(ficObject, propertiesObject),
+                        updateSortByStorage(ficName, ficObject, statsObject)
+                    ]);
 
-                // Notify other tabs about the update
-                chrome.runtime.sendMessage({
-                    action: "kudosUpdated",
-                    data: {
-                        ficName,
-                        categoryHeaps: {
-                            fandoms: categoryHeaps.fandoms.heap,
-                            characters: categoryHeaps.characters.heap,
-                            relationships: categoryHeaps.relationships.heap,
-                            additionalTags: categoryHeaps.additionalTags.heap
+                    // Only update heaps and notify other tabs after storage is updated
+                    updateCategoryHeap("fandoms", propertiesObject.ficFandom);
+                    updateCategoryHeap("characters", propertiesObject.ficCharacters);
+                    updateCategoryHeap("relationships", propertiesObject.ficRelationships);
+                    updateCategoryHeap("additionalTags", propertiesObject.ficTags);
+
+                    // Notify other tabs about the update
+                    chrome.runtime.sendMessage({
+                        action: "kudosUpdated",
+                        data: {
+                            ficName,
+                            categoryHeaps: {
+                                fandoms: categoryHeaps.fandoms.heap,
+                                characters: categoryHeaps.characters.heap,
+                                relationships: categoryHeaps.relationships.heap,
+                                additionalTags: categoryHeaps.additionalTags.heap
+                            }
                         }
-                    }
-                });
+                    });
+                } catch (error) {
+                    console.error('Error updating kudos:', error);
+                }
             });
         })
     }
 }
 
 function updateFicStorage(element, ficObject) {
-    let objArray = {}
-    objArray[element] = ficObject 
+    return new Promise((resolve, reject) => {
+        let objArray = {}
+        objArray[element] = ficObject 
 
-    chrome.storage.session.get(["storedFics"], function (result) {
-        let combinedArray = {}
-        if (result !== undefined) {
-            combinedArray = {...objArray, ...result.storedFics}
-        } else {
-            combinedArray = objArray
-        }
-        
-        chrome.storage.session.set({storedFics: combinedArray });
-    })
-
+        chrome.storage.session.get(["storedFics"], function (result) {
+            let combinedArray = {}
+            if (result !== undefined) {
+                combinedArray = {...objArray, ...result.storedFics}
+            } else {
+                combinedArray = objArray
+            }
+            
+            chrome.storage.session.set({storedFics: combinedArray }, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    });
 }
 
-function updateFilterStorage(ficObject, propertiesObject){
+function updateFilterStorage(ficObject, propertiesObject) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.session.get(["filterObject"], function(result) {
+            let newObject = {}
+            
+            let warningsObject = iterateOrAdd(propertiesObject, ficObject, result, "ficWarnings", "warnings")
+            newObject["warnings"] = warningsObject
 
-    chrome.storage.session.get(["filterObject"], function(result){
-        let newObject = {}
-        
-        let warningsObject = iterateOrAdd(propertiesObject, ficObject, result, "ficWarnings", "warnings")
-        newObject["warnings"] = warningsObject
+            let fandomObject = iterateOrAdd(propertiesObject, ficObject, result, "ficFandom", "fandoms")
+            newObject["fandoms"] = fandomObject
 
-        let fandomObject = iterateOrAdd(propertiesObject, ficObject, result, "ficFandom", "fandoms")
-        newObject["fandoms"] = fandomObject
+            let relationshipObject = iterateOrAdd(propertiesObject, ficObject, result, "ficRelationships", "relationships")
+            newObject["relationships"] = relationshipObject
+            
+            let categoriesObject = iterateOrAdd(propertiesObject, ficObject, result, "ficCategories", "categories")
+            newObject["categories"] = categoriesObject
+            
+            let charactersObject = iterateOrAdd(propertiesObject, ficObject, result, "ficCharacters", "characters")
+            newObject["characters"] = charactersObject
 
-        let relationshipObject = iterateOrAdd(propertiesObject, ficObject, result, "ficRelationships", "relationships")
-        newObject["relationships"] = relationshipObject
-        
-        let categoriesObject = iterateOrAdd(propertiesObject, ficObject, result, "ficCategories", "categories")
-        newObject["categories"] = categoriesObject
-        
-        let charactersObject = iterateOrAdd(propertiesObject, ficObject, result, "ficCharacters", "characters")
-        newObject["characters"] = charactersObject
+            let tagsObject = iterateOrAdd(propertiesObject, ficObject, result, "ficTags", "tags")
+            newObject["additionalTags"] = tagsObject
 
-        let tagsObject = iterateOrAdd(propertiesObject, ficObject, result, "ficTags", "tags")
-        newObject["additionalTags"] = tagsObject
-
-        chrome.storage.session.set({ filterObject: newObject});
-    })
-
+            chrome.storage.session.set({ filterObject: newObject}, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    });
 }
 
 function iterateOrAdd(ficProperties, ficContent, result, ficString, resultString){
@@ -270,75 +288,75 @@ function counter(){
 
 }
 
-function addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resultString){
-   
+function addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resultString) {
     let ficName = ficContent.ficName
-
     let resultProperty = {}
-    if (Object.keys(result).length !== 0 && result.filterObject[resultString]){
 
-        resultProperty = result.filterObject[resultString] // {arcane: fic1, the 100}
-        if (resultProperty[ficPropertyValue]){ 
+    if (Object.keys(result).length !== 0 && result.filterObject[resultString]) {
+        resultProperty = result.filterObject[resultString]
+        if (resultProperty[ficPropertyValue]) { 
             resultProperty[ficPropertyValue][ficName] = ficContent
         } else {
             let fic = {}
             fic[ficName] = ficContent 
             resultProperty[ficPropertyValue] = fic
         }
-        
-    } else{
+    } else {
         let fic = {}
         fic[ficName] = ficContent 
         resultProperty[ficPropertyValue] = fic 
     }
 
-    chrome.storage.session.get(["counter"]) // {fandom: [{arcane: 1}, {the 100: 2}]} 
-
     return resultProperty
 }
 
-function updateSortByStorage(ficName, ficObject, statsObject){
+function updateSortByStorage(ficName, ficObject, statsObject) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.session.get(["sortBy"], function (result) { 
+            let newObject = {}
+            let elementToAddKudos = {}
 
-    chrome.storage.session.get(["sortBy"], function (result) { 
-        let newObject = {}
-        let elementToAddKudos = {}
+            let numberKudos = Number(statsObject["Kudos:"].replace(",", ""))
+            elementToAddKudos[ficName] = numberKudos
 
-        let numberKudos = Number(statsObject["Kudos:"].replace(",", ""))
-        elementToAddKudos[ficName] = numberKudos
+            if (typeof result.sortBy !== "undefined" && result.sortBy.kudos){
+                let newArr = addElementSorted(elementToAddKudos, result.sortBy.kudos)
+                newObject["kudos"] = newArr
+            } else {
+                newObject["kudos"] = [elementToAddKudos]
+            }
+            
+            let elementToAddWordCount = {}
+            let wordCount = Number(statsObject["Words:"].replace(",", ""))
+            elementToAddWordCount[ficName] = wordCount
 
-        if (typeof result.sortBy !== "undefined" && result.sortBy.kudos){
-            let newArr = addElementSorted(elementToAddKudos, result.sortBy.kudos)
-            newObject["kudos"] = newArr
-        } else {
-            newObject["kudos"] = [elementToAddKudos]
-        }
-        
-        let elementToAddWordCount = {}
-        let wordCount = Number(statsObject["Words:"].replace(",", ""))
-        elementToAddWordCount[ficName] = wordCount
+            if (typeof result.sortBy !== "undefined" && result.sortBy.words) {
+                let newArr = addElementSorted(elementToAddWordCount, result.sortBy.words)
+                newObject["words"] = newArr
+            } else {
+                newObject["words"] = [elementToAddWordCount]
+            }
 
-        if (typeof result.sortBy !== "undefined" && result.sortBy.words) {
-            let newArr = addElementSorted(elementToAddWordCount, result.sortBy.words)
-            newObject["words"] = newArr
-        } else {
-            newObject["words"] = [elementToAddWordCount]
-        }
+            let elementToAddHits = {}
+            let hits = Number(statsObject["Hits:"].replace(",", ""))
+            elementToAddHits[ficName] = hits
 
-        let elementToAddHits = {}
-        let hits = Number(statsObject["Hits:"].replace(",", ""))
-        elementToAddHits[ficName] = hits
+            if (typeof result.sortBy !== "undefined" && result.sortBy.hits) {
+                let newArr = addElementSorted(elementToAddHits, result.sortBy.hits)
+                newObject["hits"] = newArr
+            } else {
+                newObject["hits"] = [elementToAddHits]
+            }
 
-        if (typeof result.sortBy !== "undefined" && result.sortBy.hits) {
-            let newArr = addElementSorted(elementToAddHits, result.sortBy.hits)
-            newObject["hits"] = newArr
-        } else {
-            newObject["hits"] = [elementToAddHits]
-        }
-
-
-        chrome.storage.session.set({ sortBy: newObject });
-    })
-
+            chrome.storage.session.set({sortBy: newObject}, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    });
 }
 
 function addElementSorted(element, array) {

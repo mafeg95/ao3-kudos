@@ -319,38 +319,52 @@ function fixStaticLinks(user) {
 function populateFilters(category, array, limit = 10) {
     // Get the corresponding list element
     const filterList = document.querySelector(`dd.expandable.${category} > ul`);
-    // Extract the top 'limit' items from the heap
-    const topCategories = [];
-    let categoryHeap = new MaxHeap()
-    categoryHeap.heap = array
-    // debugger
-    for (let i = 0; i < limit && categoryHeap.heap.length > 0; i++) {
-        topCategories.push(categoryHeap.extractMax()); // Remove the max element
+    if (!filterList) {
+        console.warn(`Filter list not found for category: ${category}`);
+        return;
     }
+
+    // Clear existing filters
+    filterList.innerHTML = '';
+
+    // Sort array by count (descending) and take top 'limit' items
+    const topCategories = array
+        .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category))
+        .slice(0, limit);
+
+    // Save current filter states before clearing
+    const selectedFilters = Array.from(filterList.querySelectorAll('input[type="checkbox"]'))
+        .filter(input => input.checked)
+        .map(input => input.parentElement.textContent.replace(/\(\d+\)$/, '').trim());
 
     // Populate the filter list
     topCategories.forEach(item => {
-        // debugger
-        const [name, count] = [item.category, item.count];
         const listItem = document.createElement('li');
         const label = document.createElement('label');
         const span = document.createElement('span');
         const indicator = document.createElement('span');
-
         const input = document.createElement('input');
-        input.type = "checkbox"
-        input.className = `include_kudos_search_${category}`
 
-        indicator.className = "indicator"
-        span.textContent = `${name} (${count})`;
-        label.appendChild(input)
-        label.appendChild(indicator)
-        label.appendChild(span)
+        input.type = "checkbox";
+        input.className = `include_kudos_search_${category}`;
+        // Restore checked state if this filter was previously selected
+        input.checked = selectedFilters.includes(item.category);
+
+        indicator.className = "indicator";
+        span.textContent = `${item.category} (${item.count})`;
+
+        label.appendChild(input);
+        label.appendChild(indicator);
+        label.appendChild(span);
 
         listItem.appendChild(label);
         filterList.appendChild(listItem);
-        // debugger
     });
+
+    // If any filters were selected, reapply them
+    if (selectedFilters.length > 0) {
+        applyFilters();
+    }
 
 }
 
