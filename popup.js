@@ -2,13 +2,33 @@
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "refreshKudos") {
         // First refresh filters with new data
-        if (request.data.categoryHeaps.fandoms) populateFilters('fandom', request.data.categoryHeaps.fandoms);
-        if (request.data.categoryHeaps.characters) populateFilters('character', request.data.categoryHeaps.characters);
-        if (request.data.categoryHeaps.relationships) populateFilters('relationship', request.data.categoryHeaps.relationships);
-        if (request.data.categoryHeaps.additionalTags) populateFilters('freeform', request.data.categoryHeaps.additionalTags);
+        console.log("Refreshing filters with new data");
+        console.log(request.data);
+        debugger;
+        
+        // Get relationship data from the message
+        const relationshipData = request.data.categoryHeaps.relationshipData;
+        console.log('Relationship data:', relationshipData);
+        
+        // Populate filters with relationship-aware data
+        // Populate filters with the pre-sorted data
+        if (request.data.categoryHeaps.fandoms) {
+            populateFilters('fandom', request.data.categoryHeaps.fandoms);
+        }
+        if (request.data.categoryHeaps.characters) {
+            // Characters already have relationshipCount from content.js
+            populateFilters('character', request.data.categoryHeaps.characters);
+        }
+        if (request.data.categoryHeaps.relationships) {
+            populateFilters('relationship', request.data.categoryHeaps.relationships);
+        }
+        if (request.data.categoryHeaps.additionalTags) {
+            populateFilters('freeform', request.data.categoryHeaps.additionalTags);
+        }
         
         // Then refresh displayed fics
         chrome.storage.session.get(["storedFics"], function(result) {
+            debugger
             if (result.storedFics) {
                 displayFics(result.storedFics);
             }
@@ -38,11 +58,22 @@ window.addEventListener('load', function () {
 
     // Load category heaps and populate filters
     chrome.storage.session.get(["categoryHeaps"], function (result) {
-        if (result.categoryHeaps.fandoms) populateFilters('fandom', result.categoryHeaps.fandoms);
-        // debugger
-        if (result.categoryHeaps.characters) populateFilters('character', result.categoryHeaps.characters);
-        if (result.categoryHeaps.relationships) populateFilters('relationship', result.categoryHeaps.relationships);
-        if (result.categoryHeaps.additionalTags) populateFilters('freeform', result.categoryHeaps.additionalTags);
+        if (!result.categoryHeaps) return;
+        
+        // Populate filters with the pre-sorted data
+        if (result.categoryHeaps.fandoms) {
+            populateFilters('fandom', result.categoryHeaps.fandoms);
+        }
+        if (result.categoryHeaps.characters) {
+            // Characters already have relationshipCount from content.js
+            populateFilters('character', result.categoryHeaps.characters);
+        }
+        if (result.categoryHeaps.relationships) {
+            populateFilters('relationship', result.categoryHeaps.relationships);
+        }
+        if (result.categoryHeaps.additionalTags) {
+            populateFilters('freeform', result.categoryHeaps.additionalTags);
+        }
     });
 
     // Add toggle listeners for collapsing/expanding filter sections
@@ -137,30 +168,40 @@ function sortFilteredFics(filteredFics, sortArray) {
 
 // Gathers all checked checkboxes from each category
 function getSelectedFilters() {
-    // The categories: fandoms, characters, relationships, and additionalTags (freeforms)
-    // We used className patterns like `include_kudos_search_category`
-    let categories = ["fandom", "character", "relationship", "freeform"];
-    let selected = {
+    console.log('=== Getting Selected Filters ===');
+    
+    const categories = ["fandom", "character", "relationship", "freeform"];
+    const selected = {
         fandoms: [],
         characters: [],
         relationships: [],
         additionalTags: []
     };
-    // debugger
+    
     categories.forEach(cat => {
-        let checkboxes = document.querySelectorAll(`input.include_kudos_search_${cat}:checked`);
+        const checkboxes = document.querySelectorAll(`input.include_kudos_search_${cat}:checked`);
+        console.log(`Found ${checkboxes.length} selected ${cat} filters`);
+        
         checkboxes.forEach(cb => {
-            let value = cb.parentNode.textContent.trim();
-            // Extract just the category name before the count
-            // Example: "Arcane (5)" -> "Arcane"
-            let catName = value.replace(/\(\d+\)$/, '').trim();
-            if (cat === "fandom") selected.fandoms.push(catName);
-            if (cat === "character") selected.characters.push(catName);
-            if (cat === "relationship") selected.relationships.push(catName);
-            if (cat === "freeform") selected.additionalTags.push(catName);
+            // Use the checkbox's value which contains the original tag
+            const value = cb.value;
+            
+            // For characters, we need to use the base name for comparison
+            if (cat === "character") {
+                const baseName = extractCharacterName(value, true);
+                console.log(`Character filter: ${value} -> ${baseName}`);
+                selected.characters.push(baseName);
+            } else {
+                // For other categories, use the value as is
+                if (cat === "fandom") selected.fandoms.push(value);
+                if (cat === "relationship") selected.relationships.push(value);
+                if (cat === "freeform") selected.additionalTags.push(value);
+                console.log(`${cat} filter:`, value);
+            }
         });
     });
-
+    
+    console.log('Selected filters:', selected);
     return selected;
 }
 
@@ -317,7 +358,37 @@ function fixStaticLinks(user) {
     dropdown.textContent = dropdown.textContent.replace("username", user)
 }
 
+// Clean character names consistently across the extension
+function extractCharacterName(text, forComparison = true) {
+    if (!text) return '';
+    
+    // Fix encoding issues
+    text = text.replace(/0ðÝ|0δY|[\u0000-\u001F]/g, '') // Remove control chars and corrupted UTF-8
+             .replace(/[\u2013\u2014\u2015]/g, '-')      // Normalize dashes
+             .replace(/[\uFFFD]/g, '');                   // Remove replacement character
+    
+    // Normalize whitespace
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    // If we just want the display name, return the cleaned text
+    if (!forComparison) {
+        return text;
+    }
+    
+    // For comparison, get just the base name (before any parentheses)
+    const parenIndex = text.indexOf('(');
+    if (parenIndex !== -1) {
+        return text.substring(0, parenIndex).trim();
+    }
+    
+    return text;
+}
+
 function populateFilters(category, array, limit = 10) {
+    console.log('\n=== Populating Filters ===');
+    console.log('Category:', category);
+    console.log('Data received:', array);
+    
     // Get the corresponding list element
     const filterList = document.querySelector(`dd.expandable.${category} > ul`);
     if (!filterList) {
@@ -328,45 +399,91 @@ function populateFilters(category, array, limit = 10) {
     // Clear existing filters
     filterList.innerHTML = '';
 
-    // Sort array by count (descending) and take top 'limit' items
-    const topCategories = array
-        .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category))
-        .slice(0, limit);
+    // Items are already sorted in content.js, just take the top N
+    const topItems = array.slice(0, limit);
+    console.log(`Top ${limit} items:`, topItems);
 
     // Save current filter states before clearing
     const selectedFilters = Array.from(filterList.querySelectorAll('input[type="checkbox"]'))
         .filter(input => input.checked)
-        .map(input => input.parentElement.textContent.replace(/\(\d+\)$/, '').trim());
+        .map(input => input.getAttribute('data-compare-value'));
+    
+    console.log('Previously selected filters:', selectedFilters);
 
     // Populate the filter list
-    topCategories.forEach(item => {
+    topItems.forEach((item, index) => {
         const listItem = document.createElement('li');
         const label = document.createElement('label');
         const span = document.createElement('span');
         const indicator = document.createElement('span');
         const input = document.createElement('input');
 
+        // Setup input
         input.type = "checkbox";
         input.className = `include_kudos_search_${category}`;
-        // Restore checked state if this filter was previously selected
-        input.checked = selectedFilters.includes(item.category);
-
+        
+        // Handle display value and comparison value
+        let displayValue = item.tag;
+        let compareValue = item.tag;
+        
+        if (category === 'character') {
+            // Keep full name for display, but get base name for comparison
+            displayValue = extractCharacterName(item.tag, false); // Keep fandom info
+            compareValue = extractCharacterName(item.tag, true);  // Just base name
+            
+            console.log('Character processing:', {
+                original: item.tag,
+                display: displayValue,
+                compare: compareValue
+            });
+        }
+        
+        // Store both the full tag and comparison value
+        input.value = compareValue;  // Use cleaned value for filtering
+        input.setAttribute('data-original-tag', item.tag);  // Store original for reference
+        input.setAttribute('data-compare-value', compareValue);  // Store comparison value
+        
+        // Restore checked state using the comparison value
+        input.checked = selectedFilters.includes(compareValue);
+        
+        // Setup indicator
         indicator.className = "indicator";
-        span.textContent = `${item.category} (${item.count})`;
-
+        
+        // Create separate spans for name and stats
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'name';
+        nameSpan.textContent = displayValue;
+        
+        const statsSpan = document.createElement('span');
+        statsSpan.className = 'stats';
+        
+        // Format stats display - only show kudos count
+        statsSpan.textContent = ` (${item.count})`;
+        if (category === 'character' && typeof item.relationshipCount !== 'undefined') {
+            console.log('Stats:', {
+                character: displayValue,
+                kudos: item.count,
+                relationships: item.relationshipCount
+            });
+        }
+        
+        // Add spans to the main span
+        span.appendChild(nameSpan);
+        span.appendChild(statsSpan);
+        
+        // Assemble the elements
         label.appendChild(input);
         label.appendChild(indicator);
         label.appendChild(span);
-
         listItem.appendChild(label);
         filterList.appendChild(listItem);
     });
 
     // If any filters were selected, reapply them
     if (selectedFilters.length > 0) {
+        console.log('Reapplying filters:', selectedFilters);
         applyFilters();
     }
-
 }
 
 function addToggleListeners(){

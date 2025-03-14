@@ -1,11 +1,59 @@
+// Helper function to check if extension context is valid
+// function isExtensionContextValid() {
+//     try {
+//         // Try to access chrome.runtime
+//         return chrome.runtime && chrome.runtime.id;
+//     } catch (e) {
+//         return false;
+//     }
+// }
+
+// Helper function to safely execute chrome API calls
+// function safeExecuteChromeAPI(operation) {
+//     if (!isExtensionContextValid()) {
+//         console.warn('Extension context invalid, reloading page...');
+//         window.location.reload();
+//         return false;
+//     }
+//     try {
+//         operation();
+//         return true;
+//     } catch (e) {
+//         if (e.message.includes('Extension context invalidated')) {
+//             console.warn('Extension context invalid, reloading page...');
+//             window.location.reload();
+//             return false;
+//         }
+//         console.error('Chrome API error:', e);
+//         return false;
+//     }
+// }
+
 // Listen for kudos updates from other tabs
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    // if (!isExtensionContextValid()) return;
+    
     if (request.action === "refreshKudos") {
-        // Refresh heaps from the updated data
-        categoryHeaps.fandoms.refreshFromStorage(request.data.categoryHeaps.fandoms);
-        categoryHeaps.characters.refreshFromStorage(request.data.categoryHeaps.characters);
-        categoryHeaps.relationships.refreshFromStorage(request.data.categoryHeaps.relationships);
-        categoryHeaps.additionalTags.refreshFromStorage(request.data.categoryHeaps.additionalTags);
+        // safeExecuteChromeAPI(() => {
+            // Refresh heaps from the updated data
+            categoryHeaps.fandoms.refreshFromStorage(request.data.categoryHeaps.fandoms);
+            categoryHeaps.characters.refreshFromStorage(request.data.categoryHeaps.characters);
+            categoryHeaps.additionalTags.refreshFromStorage(request.data.categoryHeaps.additionalTags);
+            
+            // Handle relationships data
+            if (request.data.relationshipData) {
+                // Update relationship data first
+                categoryHeaps.relationships.characterRelationships = request.data.relationshipData.characterRelationships;
+                // Then refresh the heap with the full data
+                categoryHeaps.relationships.refreshFromStorage(request.data.relationshipData.heap);
+            } else if (request.data.categoryHeaps.relationships) {
+                // Fallback to just refreshing the heap if no relationship data
+                categoryHeaps.relationships.refreshFromStorage(request.data.categoryHeaps.relationships);
+            } else {
+                console.warn('No relationship data received');
+                categoryHeaps.relationships.refreshFromStorage([]);
+            }
+        // });
     }
 });
 
@@ -23,19 +71,45 @@ let categoryHeaps = {
     fandoms: new MaxHeap(),
     characters: new MaxHeap(),
     relationships: new MaxHeap(),
-    additionalTags: new MaxHeap()
+    additionalTags: new MaxHeap(),
+    relationshipData: {
+        characterRelationships: {}
+    }
 };
 
-chrome.storage.session.get(["categoryHeaps"], function (result) {
-    if (result.categoryHeaps) {
-        categoryHeaps.fandoms.heap = result.categoryHeaps.fandoms || [];
-        categoryHeaps.characters.heap = result.categoryHeaps.characters || [];
-        categoryHeaps.relationships.heap = result.categoryHeaps.relationships || [];
-        categoryHeaps.additionalTags.heap = result.categoryHeaps.additionalTags || []
-    }
-});
+// Load initial heap data from storage
+// if (isExtensionContextValid()) {
+//     safeExecuteChromeAPI(() => {
+        chrome.storage.session.get(["categoryHeaps"], function (result) {
+            if (result.categoryHeaps) {
+                // Load each heap's data
+                categoryHeaps.fandoms.refreshFromStorage(result.categoryHeaps.fandoms || []);
+                categoryHeaps.characters.refreshFromStorage(result.categoryHeaps.characters || []);
+                categoryHeaps.additionalTags.refreshFromStorage(result.categoryHeaps.additionalTags || []);
+                
+                // Handle relationships and relationship data separately
+                if (result.categoryHeaps.relationshipData) {
+                    // Load relationship data
+                    categoryHeaps.relationshipData = result.categoryHeaps.relationshipData;
+                }
+                
+                // Load relationships heap
+                if (result.categoryHeaps.relationships) {
+                    categoryHeaps.relationships.refreshFromStorage(result.categoryHeaps.relationships);
+                }
+            }
+        });
+//     });
+// }
 
 function updateCategoryHeap(category, items, options = {}) {
+    console.log(`\n=== UPDATING ${category.toUpperCase()} HEAP ===`);
+    console.log('Items to process:', items);
+    console.log('Current heap state:', categoryHeaps[category].heap);
+    if (category === 'characters') {
+        console.log('Current relationships state:', categoryHeaps.relationshipData.characterRelationships);
+    }
+
     if (!Array.isArray(items)) {
         console.warn(`updateCategoryHeap received non-array items for category: ${category}`, items);
         return;
@@ -46,31 +120,245 @@ function updateCategoryHeap(category, items, options = {}) {
         return;
     }
 
-    // If this is a relationships category, process the relationships first
+    // Process items based on category
     if (category === 'relationships') {
-        items.forEach(relationship => {
-            if (relationship.includes('/')) {
-                categoryHeaps[category].processRelationship(relationship);
+        // For relationships, first update the heap and then update character relationship counts
+        if (!Array.isArray(items)) {
+            console.error('Invalid items array for relationships:', items);
+            return;
+        }
+
+        // Initialize or reset relationship data for this update
+        if (!categoryHeaps.relationshipData) {
+            categoryHeaps.relationshipData = { characterRelationships: {} };
+        }
+
+        console.log('Processing relationships:', items);
+        items.forEach(item => {
+            // Convert string items to proper format
+            const relationship = typeof item === 'string' ? { tag: item, count: 1 } : item;
+            
+            // Skip invalid relationships
+            if (!relationship.tag || typeof relationship.tag !== 'string') {
+                console.warn('Invalid relationship:', relationship);
+                return;
             }
+
+            // Add to relationships heap
+            categoryHeaps[category].insertOrUpdate(relationship, 1, options);
+
+            // Process character relationships
+            if (relationship.tag.includes('/')) {
+                const characters = relationship.tag.split('/')
+                    .map(char => char.trim())
+                    .filter(char => char.length > 0);
+                
+                console.log(`Found characters in relationship '${relationship.tag}':`, characters);
+                
+                characters.forEach(char => {
+                    // Get the cleaned character name
+                    const cleanedName = extractCharacterName(char);
+                    
+                    // Find matching character in heap or use original
+                    let characterTag = char;
+                    const existingChar = categoryHeaps.characters.heap.find(c => 
+                        extractCharacterName(c.tag) === cleanedName
+                    );
+                    
+                    if (existingChar) {
+                        characterTag = existingChar.tag;
+                        console.log(`Using existing character tag: ${characterTag}`);
+                    }
+                    
+                    // Update relationship count
+                    if (!categoryHeaps.relationshipData.characterRelationships[characterTag]) {
+                        categoryHeaps.relationshipData.characterRelationships[characterTag] = 0;
+                    }
+                    categoryHeaps.relationshipData.characterRelationships[characterTag]++;
+                    
+                    console.log(`Updated relationship count for '${characterTag}':`, 
+                        categoryHeaps.relationshipData.characterRelationships[characterTag]);
+                });
+            }
+        });
+    } else if (category === 'characters') {
+        // For characters, include relationship count in the sorting
+        items.forEach(item => {
+            // Convert string items to proper format
+            const character = typeof item === 'string' ? { tag: item, count: 1 } : item;
+            
+            // Skip invalid characters
+            if (!character.tag || typeof character.tag !== 'string') {
+                console.warn('Invalid character:', character);
+                return;
+            }
+            
+            console.log(`Processing character: ${character.tag}`);
+            
+            // Clean the character name
+            const cleanedName = extractCharacterName(character.tag);
+            
+            // Get relationship count for this character
+            const relationshipCount = categoryHeaps.relationshipData?.characterRelationships[character.tag] || 0;
+            
+            // Calculate total score (relationships weighted heavily)
+            const totalScore = (relationshipCount * 1000) + (character.count || 1);
+            
+            // Create character item with all metadata
+            const characterItem = {
+                ...character,
+                count: character.count || 1,
+                relationshipCount,
+                totalScore,
+                cleanedName
+            };
+            
+            console.log('Character data:', {
+                tag: character.tag,
+                cleanedName,
+                kudos: characterItem.count,
+                relationships: relationshipCount,
+                totalScore
+            });
+            
+            // Add to characters heap
+            categoryHeaps[category].insertOrUpdate(characterItem, 1, options);
+        });
+    } else {
+        // For other categories, just update normally
+        items.forEach(item => {
+            console.log(`\nProcessing ${category} item: ${item.tag}`);
+            categoryHeaps[category].insertOrUpdate(item, 1, options);
         });
     }
 
-    // Insert or update items in the heap
-    items.forEach(item => {
-        categoryHeaps[category].insertOrUpdate(item, 1, options);
-    });
+    console.log('\nAfter processing:');
+    console.log('Updated heap:', categoryHeaps[category].heap);
+    if (category === 'character') {
+        console.log('Updated relationships:', categoryHeaps.relationshipData.characterRelationships);
+    }
 
-    // Save the updated heaps to session storage
-    chrome.storage.session.set({
-        categoryHeaps: {
-            fandoms: categoryHeaps.fandoms.heap,
-            characters: categoryHeaps.characters.heap,
-            relationships: categoryHeaps.relationships.heap,
-            additionalTags: categoryHeaps.additionalTags.heap
-        }
-    });
+    // // Save the updated heaps and relationship data to session storage
+    // if (isExtensionContextValid()) {
+    //     safeExecuteChromeAPI(() => {
+            // Prepare the data to store and send
+            const heapData = {
+                fandoms: categoryHeaps.fandoms.heap,
+                characters: categoryHeaps.characters.heap.map(char => {
+                    // Include all relationship counts from character variants
+                    const cleanedName = extractCharacterName(char.tag);
+                    const variants = categoryHeaps.characters.heap
+                        .filter(variant => extractCharacterName(variant.tag) === cleanedName);
+                    const totalRelationships = variants.reduce((total, variant) => 
+                        total + (categoryHeaps.relationshipData.characterRelationships[variant.tag] || 0), 0);
+                    
+                    return {
+                        ...char,
+                        cleanedName,
+                        relationshipCount: totalRelationships
+                    };
+                }),
+                relationships: categoryHeaps.relationships.heap,
+                additionalTags: categoryHeaps.additionalTags.heap,
+                relationshipData: categoryHeaps.relationshipData
+            };
+
+            // Store in session storage
+            chrome.storage.session.set({
+                categoryHeaps: heapData
+            }, () => {
+                // After saving, notify the popup to refresh with the same data
+                chrome.runtime.sendMessage({
+                    action: "refreshKudos",
+                    data: {
+                        categoryHeaps: heapData
+                    }
+                });
+            });
+    //     });
+    // }
+
+    console.log('=== UPDATE COMPLETE ===\n');
 }
 
+
+function extractCharacterName(text, forComparison = true) {
+    if (!text || typeof text !== 'string') return '';
+    
+    console.log('\n=== Processing Character Name ===');
+    console.log('Original:', text);
+    
+    // Fix encoding issues - replace common corrupted characters
+    text = text.replace(/0ðÝ|0δY|[\u0000-\u001F]/g, '') // Remove control chars and corrupted UTF-8
+             .replace(/[\u2013\u2014\u2015]/g, '-')      // Normalize dashes
+             .replace(/[\uFFFD]/g, '');                   // Remove replacement character
+    
+    // Normalize whitespace and trim
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    // If we just want the display name, do minimal cleaning
+    if (!forComparison) {
+        return text.trim();
+    }
+    
+    // For comparison, extract just the base character name
+    let baseName = text;
+    
+    // Remove everything after first parenthesis (including the parenthesis)
+    const parenIndex = baseName.indexOf('(');
+    if (parenIndex !== -1) {
+        baseName = baseName.substring(0, parenIndex).trim();
+        console.log('After removing parenthetical:', baseName);
+    }
+    
+    // Remove everything after first bracket
+    const bracketIndex = baseName.indexOf('[');
+    if (bracketIndex !== -1) {
+        baseName = baseName.substring(0, bracketIndex).trim();
+        console.log('After removing brackets:', baseName);
+    }
+    
+    // Remove fandom prefix (e.g., "League of Legends: Vi" -> "Vi")
+    if (baseName.includes(':')) {
+        baseName = baseName.split(':').pop().trim();
+        console.log('After removing prefix:', baseName);
+    }
+    
+    // Remove everything after a dash or pipe
+    const separatorIndex = Math.min(
+        baseName.indexOf(' - ') !== -1 ? baseName.indexOf(' - ') : Infinity,
+        baseName.indexOf(' | ') !== -1 ? baseName.indexOf(' | ') : Infinity
+    );
+    if (separatorIndex !== Infinity) {
+        baseName = baseName.substring(0, separatorIndex).trim();
+        console.log('After removing suffix:', baseName);
+    }
+    
+    // Special case: if we have multiple words, check if the last word could be the base name
+    if (baseName.includes(' ')) {
+        const words = baseName.split(' ');
+        const lastWord = words[words.length - 1];
+        
+        // Only check against the raw tag values to avoid recursion
+        const simpleVersionExists = categoryHeaps.characters.heap
+            .some(item => {
+                // Simple pattern matching instead of recursive cleaning
+                const itemTag = item.tag;
+                return itemTag === lastWord || 
+                       itemTag.startsWith(lastWord + ' (') || 
+                       itemTag.startsWith(lastWord + ' [') || 
+                       itemTag.includes(': ' + lastWord);
+            });
+        
+        if (simpleVersionExists) {
+            baseName = lastWord;
+            console.log(`Found simpler version, using: ${baseName}`);
+        }
+    }
+    
+    console.log(`Final result: ${text} -> ${baseName}`);
+    return baseName;
+}
 
 function iterateThroughChildren(htmlCollection, selector){
     let stringArray = []
@@ -87,9 +375,10 @@ function iterateThroughChildren(htmlCollection, selector){
 
     for (let i = 0; i < htmlCollection.length; i++) {
         const element = htmlCollection[i];
-        stringArray.push(element.textContent)
+        const text = element.textContent;
+        stringArray.push(text.trim());
     }
-    return stringArray
+    return stringArray;
 }
 
 function buildStatsObj(htmlCollection) {
@@ -104,15 +393,18 @@ function buildStatsObj(htmlCollection) {
 }
 
 function scrapeKudosFromPage(){
+    console.log('=== Starting Kudos Processing ===');
     const kudosButton = document.getElementById("kudo_submit")
     
     if (typeof kudosButton !== "undefined" && kudosButton !== null) {
         kudosButton.addEventListener("click", () => {
+            console.log('\n=== Kudos Button Clicked ===');
             let ficObject = {}
             let propertiesObject = {}
             let statsObject = {}
 
             let ficName = document.getElementsByClassName("title heading")[0].textContent.trim() || ''
+            console.log('Processing fic:', ficName);
 
             const selectors = {
                 ficWarnings: "dd.warning.tags > ul",
@@ -129,11 +421,13 @@ function scrapeKudosFromPage(){
                 return element || null;
             };
 
+            console.log('\n=== Scraping Fic Data ===');
             // Process each selector
             Object.entries(selectors).forEach(([key, selector]) => {
                 const element = getElement(selector);
                 ficObject[key] = element ? element.innerHTML.trim() : '';
                 propertiesObject[key] = iterateThroughChildren(element?.children, selector);
+                console.log(`${key}:`, propertiesObject[key]);
             });
 
             ficObject["ficLanguage"] = document.querySelector("dd.language").innerHTML.trim() || ''
@@ -154,14 +448,22 @@ function scrapeKudosFromPage(){
             }
 
             // Check if fic is already kudosed and handle all updates
+            // if (!isExtensionContextValid()) {
+            //     console.warn('Extension context invalid during kudos, reloading...');
+            //     window.location.reload();
+            //     return;
+            // }
+
             chrome.storage.session.get(["storedFics"], async function(result) {
                 if (result.storedFics && result.storedFics[ficName]) {
                     console.log('Fic already kudosed:', ficName);
                     return;
                 }
 
-
                 try {
+                    // if (!isExtensionContextValid()) throw new Error('Extension context invalidated');
+
+                    console.log('\n=== Updating Storage ===');
                     // Wait for all storage operations to complete
                     await Promise.all([
                         updateFicStorage(ficName, ficObject),
@@ -169,27 +471,66 @@ function scrapeKudosFromPage(){
                         updateSortByStorage(ficName, ficObject, statsObject)
                     ]);
 
-                                    // First process relationships to build up the relationship map
-                    updateCategoryHeap("relationships", propertiesObject.ficRelationships);
+                    console.log('\n=== Processing Categories ===');
+                    console.log('Current heaps state:', {
+                        relationships: categoryHeaps.relationships.heap.length,
+                        characters: categoryHeaps.characters.heap.length,
+                        fandoms: categoryHeaps.fandoms.heap.length,
+                        additionalTags: categoryHeaps.additionalTags.heap.length
+                    });
                     
-                    // Process characters with relationship information
-                    updateCategoryHeap("characters", propertiesObject.ficCharacters, { type: 'character' });
+                    // Process relationships first to build relationship data
+                    console.log('\nProcessing relationships...');
+                    console.log('Relationships to process:', propertiesObject.ficRelationships);
+                    updateCategoryHeap('relationships', propertiesObject.ficRelationships, { type: 'relationship' });
                     
-                    // Process other categories normally
-                    updateCategoryHeap("fandoms", propertiesObject.ficFandom);
-                    updateCategoryHeap("additionalTags", propertiesObject.ficTags);
+                    // Then process characters with updated relationship data
+                    console.log('\nProcessing characters...');
+                    console.log('Characters to process:', propertiesObject.ficCharacters);
+                    console.log('Current relationship data:', categoryHeaps.relationshipData.characterRelationships);
+                    updateCategoryHeap('characters', propertiesObject.ficCharacters, { type: 'character' });
+                    
+                    // Process remaining categories
+                    console.log('\nProcessing fandoms...');
+                    updateCategoryHeap('fandoms', propertiesObject.ficFandom, { type: 'fandom' });
+                    
+                    console.log('\nProcessing additional tags...');
+                    updateCategoryHeap('additionalTags', propertiesObject.ficTags, { type: 'tag' });
+                    
+                    console.log('\n=== Saving to Storage ===');
+                    
+                    // Prepare the data update once
+                    const heapData = {
+                        fandoms: categoryHeaps.fandoms.heap,
+                        characters: categoryHeaps.characters.heap,
+                        relationships: categoryHeaps.relationships.heap,
+                        additionalTags: categoryHeaps.additionalTags.heap
+                    };
+                    
+                    const relationshipData = {
+                        heap: categoryHeaps.relationships.heap,
+                        characterRelationships: categoryHeaps.relationships.characterRelationships
+                    };
+                    
+                    // Log final state
+                    console.log('Final character heap:', categoryHeaps.characters.heap);
+                    console.log('Final relationship data:', relationshipData);
+                    
+                    // Store everything in a single operation
+                    await chrome.storage.session.set({
+                        categoryHeaps: {
+                            ...heapData,
+                            relationshipData  // Store full relationship data
+                        }
+                    });
 
-                    // Notify other tabs about the update
+                    // Notify other tabs with the same data structure
                     chrome.runtime.sendMessage({
                         action: "kudosUpdated",
                         data: {
                             ficName,
-                            categoryHeaps: {
-                                fandoms: categoryHeaps.fandoms.heap,
-                                characters: categoryHeaps.characters.heap,
-                                relationships: categoryHeaps.relationships.heap,
-                                additionalTags: categoryHeaps.additionalTags.heap
-                            }
+                            categoryHeaps: heapData,
+                            relationshipData // Keep relationship data separate for popup
                         }
                     });
                 } catch (error) {
@@ -258,47 +599,38 @@ function updateFilterStorage(ficObject, propertiesObject) {
     });
 }
 
-function iterateOrAdd(ficProperties, ficContent, result, ficString, resultString){
-    let combinedObj = {}
-    let propertyValue = ficProperties[ficString] 
-
-    if (typeof propertyValue === "string"){
+function iterateOrAdd(ficProperties, ficContent, result, ficString, resultString) {
+    // Initialize result property from existing data or create new
+    let resultProperty = (result && result.filterObject && result.filterObject[resultString]) || {};
+    
+    // Get property values (could be string or array)
+    let propertyValues = ficProperties[ficString];
+    if (!propertyValues) return resultProperty;
+    
+    // Convert to array if string
+    if (typeof propertyValues === "string") {
+        propertyValues = [propertyValues];
+    }
+    
+    // Process each value
+    for (let value of propertyValues) {
+        // Skip empty values
+        if (!value) continue;
         
-        combinedObj = addNewFicToObject(propertyValue, ficContent, result, ficString, resultString)
-    } else {
-        for (let i = 0; i < propertyValue.length; i++) {
-            let ficPropertyValue = propertyValue[i]; 
-            
-            combinedObj = { ...combinedObj, ...addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resultString)}
+        // Clean character names for comparison
+        let propertyKey = value;
+        if (resultString === 'characters') {
+            propertyKey = extractCharacterName(value, true);
         }
-    }
-    return combinedObj
-}
-
-function counter(){
-
-}
-
-function addNewFicToObject(ficPropertyValue, ficContent, result, ficString, resultString) {
-    let ficName = ficContent.ficName
-    let resultProperty = {}
-
-    if (Object.keys(result).length !== 0 && result.filterObject[resultString]) {
-        resultProperty = result.filterObject[resultString]
-        if (resultProperty[ficPropertyValue]) { 
-            resultProperty[ficPropertyValue][ficName] = ficContent
-        } else {
-            let fic = {}
-            fic[ficName] = ficContent 
-            resultProperty[ficPropertyValue] = fic
+        
+        // Add or update fic reference
+        if (!resultProperty[propertyKey]) {
+            resultProperty[propertyKey] = {};
         }
-    } else {
-        let fic = {}
-        fic[ficName] = ficContent 
-        resultProperty[ficPropertyValue] = fic 
+        resultProperty[propertyKey][ficContent.ficName] = ficContent;
     }
-
-    return resultProperty
+    
+    return resultProperty;
 }
 
 function updateSortByStorage(ficName, ficObject, statsObject) {
@@ -399,6 +731,12 @@ function addMyKudosToMenu(){
     
     if (typeof dropdownMenu !== "undefined" && dropdownMenu !== null) {
         dropdownMenu.addEventListener('mouseover', function () {
+            // if (!isExtensionContextValid()) {
+            //     console.warn('Extension context invalid during menu interaction, reloading...');
+            //     window.location.reload();
+            //     return;
+            // }
+
             let li = document.createElement("li")
             let a = document.createElement("a")
 
@@ -412,7 +750,14 @@ function addMyKudosToMenu(){
                 this.children[0].children[1].appendChild(li)
 
                 a.addEventListener('click', function () {
-                    chrome.runtime.sendMessage({ action: "MyKudos" })
+                    // if (!isExtensionContextValid()) {
+                    //     console.warn('Extension context invalid during kudos menu click, reloading...');
+                    //     window.location.reload();
+                    //     return;
+                    // }
+                    // safeExecuteChromeAPI(() => {
+                        chrome.runtime.sendMessage({ action: "MyKudos" })
+                    // });
                 })
             }
         });
