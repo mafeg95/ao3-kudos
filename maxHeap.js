@@ -3,7 +3,6 @@ class MaxHeap {
         this.heap = [];
         this.insertionOrder = 0; // Track how many items have been inserted
         this.items = new Set(); // Track unique items
-        this.characterRelationships = {}; // Only used by relationships heap
     }
 
     // Method to refresh heap from storage
@@ -24,17 +23,20 @@ class MaxHeap {
                 
                 const itemCount = item.count || 1;
                 const isCharacter = item.type === 'character';
-                const relationshipCount = isCharacter ? (item.relationshipCount || 0) : 0;
-                const totalScore = isCharacter ? (relationshipCount * 1000 + itemCount) : itemCount;
                 
                 const heapItem = {
                     tag,
                     count: itemCount,
                     type: item.type,
-                    order: item.order || ++this.insertionOrder,
-                    relationshipCount,
-                    totalScore
+                    order: item.order || ++this.insertionOrder
                 };
+                
+                // For characters, get their current relationship count
+                if (isCharacter) {
+                    // Use provided relationship count or default to stored count
+                    const cleanedName = extractCharacterName(tag, true);
+                    heapItem.relationshipCount = item.relationshipCount || (categoryHeaps.relationshipData.get(cleanedName) || 0);
+                }
                 
                 this.heap.push(heapItem);
                 this.items.add(tag);
@@ -54,9 +56,7 @@ class MaxHeap {
             bulkAddItems(heapData.heap);
             
             // Restore relationship counts
-            if (heapData.characterRelationships) {
-                this.characterRelationships = heapData.characterRelationships;
-            }
+
         }
     }
 
@@ -66,8 +66,6 @@ class MaxHeap {
             console.warn('Invalid relationship:', relationship);
             return;
         }
-        
-        console.log('Processing relationship:', relationship);
         
         // Split relationship into character tags
         const characters = relationship.split('/')
@@ -79,24 +77,11 @@ class MaxHeap {
             return;
         }
 
-        console.log('Found characters:', characters);
-
-        // Initialize characterRelationships if needed
-        if (!this.characterRelationships) {
-            this.characterRelationships = {};
-        }
-
-        // Update counts for each character
+        // Update relationship counts in the global Map
         characters.forEach(char => {
-            if (!this.characterRelationships[char]) {
-                this.characterRelationships[char] = 0;
-            }
-            this.characterRelationships[char]++;
-            
-            console.log('Updated relationship count:', {
-                character: char,
-                newCount: this.characterRelationships[char]
-            });
+            const cleanedName = extractCharacterName(char, true);
+            const currentCount = categoryHeaps.relationshipData.get(cleanedName) || 0;
+            categoryHeaps.relationshipData.set(cleanedName, currentCount + 1);
         });
     }
 
@@ -116,47 +101,21 @@ class MaxHeap {
             return;
         }
         
-        console.log('=== INSERT/UPDATE ===');
-        console.log('Input:', { item, count, options });
-        
-        this.insertionOrder++;
-        
-        // For characters, handle relationship counts
-        const isCharacter = options.type === 'character';
-        const relationshipCount = isCharacter ? (options.relationshipCount || 0) : 0;
-        const totalScore = isCharacter ? (relationshipCount * 1000 + itemCount) : itemCount;
-        
-        // For relationships, process character relationships
-        if (options.type === 'relationship' && tag.includes('/')) {
-            const characters = tag.split('/')
-                .map(char => char.trim())
-                .filter(char => char.length > 0);
-            
-            console.log('Processing relationship characters:', characters);
-            
-            // Update relationship counts for each character
-            characters.forEach(char => {
-                if (!this.characterRelationships[char]) {
-                    this.characterRelationships[char] = 0;
-                }
-                this.characterRelationships[char]++;
-                console.log(`Updated relationship count for ${char}: ${this.characterRelationships[char]}`);
-            });
-        }
-        
         // Check if tag exists
         if (this.items.has(tag)) {
-            console.log('Updating existing tag:', tag);
             let index = this.heap.findIndex(item => item.tag === tag);
             
-            // Update counts
-            const oldCount = this.heap[index].count || 0;
-            this.heap[index].count = (oldCount + itemCount);
+            // Save old state for comparison
+            const oldItem = { ...this.heap[index] };
             
-            // Update character-specific data
-            if (isCharacter) {
-                this.heap[index].relationshipCount = relationshipCount;
-                this.heap[index].totalScore = totalScore;
+            // Increment count by 1 for any tag we see again
+            this.heap[index].count++;
+            console.log(`Tag ${tag} seen again - count now ${this.heap[index].count}`);
+            
+            // Update character-specific data if needed
+            if (options.type === 'character') {
+                const cleanedName = extractCharacterName(tag, true);
+                this.heap[index].relationshipCount = categoryHeaps.relationshipData.get(cleanedName) || 0;
             }
             
             // Update type if provided
@@ -164,53 +123,72 @@ class MaxHeap {
                 this.heap[index].type = options.type;
             }
             
-            console.log('Updated item:', this.heap[index]);
-            
-            // Rebalance heap
-            this.bubbleUp(index);
-            this.bubbleDown(index);
+            // Compare with old state to determine rebalancing direction
+            console.log('Comparing old and new:', oldItem, this.heap[index]);
+            if (isGreater(this.heap[index], oldItem)) {
+                // Priority increased, bubble up
+                this.bubbleUp(index);
+            } else if (isGreater(oldItem, this.heap[index])) {
+                // Priority decreased, bubble down
+                this.bubbleDown(index);
+            }
         } else {
-            console.log('Inserting new tag:', tag);
             
-            // Create new item
+            // Only increment insertionOrder for new items
+            this.insertionOrder++;
+            
+            // Create new item - all tags start with count=1
             const newItem = { 
                 tag,
-                count: itemCount,
-                order: this.insertionOrder,
+                count: 1,  // All tags start at 1 when first seen
+                order: this.insertionOrder,  // Use the new insertion order
                 type: options.type
             };
             
             // Add character-specific data
-            if (isCharacter) {
-                newItem.relationshipCount = relationshipCount;
-                newItem.totalScore = totalScore;
+            if (options.type === 'character') {
+                // Get relationship count from the global Map
+                const cleanedName = extractCharacterName(tag, true);
+                newItem.relationshipCount = categoryHeaps.relationshipData.get(cleanedName) || 0;
+                console.log(`New character ${tag} with count=1 and relationships=${newItem.relationshipCount}`);
             }
-            
-            console.log('New item:', newItem);
             
             // Add to heap
             this.items.add(tag);
             this.heap.push(newItem);
             this.bubbleUp(this.heap.length - 1);
         }
+    }
+
+    // Find equal-valued nodes that should be compared
+    findEqualNodes(index) {
+        const current = this.heap[index];
+        const equalNodes = [];
         
-        console.log('=== UPDATE COMPLETE ===');
-        console.log('Final heap state:', {
-            size: this.heap.length,
-            items: this.items.size,
-            relationships: Object.keys(this.characterRelationships).length
-        });
+        // Find all nodes with equal kudos and relationship counts
+        for (let i = 0; i < this.heap.length; i++) {
+            if (i !== index && 
+                current.count === this.heap[i].count && 
+                (current.relationshipCount || 0) === (this.heap[i].relationshipCount || 0)) {
+                equalNodes.push(i);
+            }
+        }
+        
+        return equalNodes;
     }
 
     bubbleUp(index) {
-        while (index > 0) {
-            const parentIdx = this.parent(index);
-            // For max heap, if current node is greater than parent, swap them
-            if (!isGreater(this.heap[index], this.heap[parentIdx], this)) break;
+        let currentIndex = index;
+        while (currentIndex > 0) {
+            const parentIdx = this.parent(currentIndex);
             
-            // Swap with parent
-            [this.heap[index], this.heap[parentIdx]] = [this.heap[parentIdx], this.heap[index]];
-            index = parentIdx;
+            if (!isGreater(this.heap[currentIndex], this.heap[parentIdx])) {
+                break;
+            }
+            
+            // Swap with parent and continue up
+            [this.heap[currentIndex], this.heap[parentIdx]] = [this.heap[parentIdx], this.heap[currentIndex]];
+            currentIndex = parentIdx;
         }
     }
 
@@ -219,32 +197,23 @@ class MaxHeap {
         let current = index;
 
         while (true) {
-            let largest = current;
             const left = this.left(current);
             const right = this.right(current);
+            let largest = current;
 
-            // For max heap, find the largest among current, left and right
-            if (left < size && isGreater(this.heap[left], this.heap[largest], this)) {
+            if (left < size && isGreater(this.heap[left], this.heap[largest])) {
                 largest = left;
             }
-            if (right < size && isGreater(this.heap[right], this.heap[largest], this)) {
+            if (right < size && isGreater(this.heap[right], this.heap[largest])) {
                 largest = right;
             }
 
             if (largest === current) break;
 
+            // Swap with largest child and continue down
             [this.heap[current], this.heap[largest]] = [this.heap[largest], this.heap[current]];
             current = largest;
         }
-    }
-
-    getTopTags(k) {
-        // Return top k elements with both tag and count
-        return this.heap.slice(0, k).map(item => ({
-            tag: item.tag,
-            count: item.count,
-            type: item.type
-        }));
     }
 
     extractMax() {
@@ -257,28 +226,45 @@ class MaxHeap {
         }
         return max;
     }
+
+
 }
 
 // Helper function to compare heap items
 function isGreater(a, b) {
-    console.log('\n=== COMPARING ===');
-    console.log(`Comparing ${a.tag} vs ${b.tag}`);
+    console.log('Comparing:', a, b)
     
-    // For character tags, use totalScore which includes both kudos and relationships
+    // For character tags, use special comparison logic
     if (a.type === 'character' && b.type === 'character') {
-        if (a.totalScore !== b.totalScore) {
-            console.log(`Deciding by total score: ${a.totalScore} vs ${b.totalScore}`);
-            return a.totalScore > b.totalScore;
-        }
-    } else {
-        // For non-character tags, just compare counts
+        const cleanNameA = extractCharacterName(a.tag, true);
+        const cleanNameB = extractCharacterName(b.tag, true);
+        
+        // Get relationship counts from the global relationship data
+        const relationshipsA = categoryHeaps.relationshipData.get(cleanNameA) || 0;
+        const relationshipsB = categoryHeaps.relationshipData.get(cleanNameB) || 0;
+        
+        // First compare by appearance count
         if (a.count !== b.count) {
-            console.log(`Deciding by count: ${a.count} vs ${b.count}`);
             return a.count > b.count;
         }
+        
+        // If counts are equal, characters with relationships go first
+        if ((relationshipsA > 0) !== (relationshipsB > 0)) {
+            return relationshipsA > 0;
+        }
+        
+        // If both have relationships, compare by relationship count
+        if (relationshipsA !== relationshipsB) {
+            return relationshipsA > relationshipsB;
+        }
+        
+        // If everything else is equal, use insertion order
+        return a.order < b.order;
+    } else {
+        // For non-character tags, just compare appearance counts
+        if (a.count !== b.count) {
+            return a.count > b.count;
+        }
+        return a.order < b.order;  // Use order for equal non-character tags too
     }
-
-    // If scores/counts are equal, use insertion order (earlier items have priority)
-    console.log(`Deciding by insertion order: ${a.order} vs ${b.order}`);
-    return a.order < b.order;
 }

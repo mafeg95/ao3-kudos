@@ -1,34 +1,44 @@
 // Listen for kudos updates from other tabs
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "refreshKudos") {
-        // First refresh filters with new data
-        console.log("Refreshing filters with new data");
-        console.log(request.data);
-        debugger;
+        // Convert relationship data back to a Map for efficient lookups
+        const { categoryHeaps } = request.data;
+        const relationshipData = new Map(Object.entries(request.data.relationshipData || {}));
         
-        // Get relationship data from the message
-        const relationshipData = request.data.categoryHeaps.relationshipData;
-        console.log('Relationship data:', relationshipData);
+        // Populate filters with the pre-sorted data and relationship data
+        if (categoryHeaps.fandoms) {
+            populateFilters('fandom', categoryHeaps.fandoms, { relationshipData });
+        } else {
+            console.warn('No fandom data available');
+        }
         
-        // Populate filters with relationship-aware data
-        // Populate filters with the pre-sorted data
-        if (request.data.categoryHeaps.fandoms) {
-            populateFilters('fandom', request.data.categoryHeaps.fandoms);
+        // For characters, use the cached top 10
+        if (categoryHeaps.characters) {
+            chrome.storage.local.get('cachedTop10Characters', (result) => {
+                if (result.cachedTop10Characters) {
+                    populateFilters('character', result.cachedTop10Characters, { relationshipData });
+                } else {
+                    console.warn('No cached character data available');
+                }
+            });
+        } else {
+            console.warn('No character data available');
         }
-        if (request.data.categoryHeaps.characters) {
-            // Characters already have relationshipCount from content.js
-            populateFilters('character', request.data.categoryHeaps.characters);
+        
+        if (categoryHeaps.relationships) {
+            populateFilters('relationship', categoryHeaps.relationships, { relationshipData });
+        } else {
+            console.warn('No relationship data available');
         }
-        if (request.data.categoryHeaps.relationships) {
-            populateFilters('relationship', request.data.categoryHeaps.relationships);
-        }
-        if (request.data.categoryHeaps.additionalTags) {
-            populateFilters('freeform', request.data.categoryHeaps.additionalTags);
+        
+        if (categoryHeaps.additionalTags) {
+            populateFilters('freeform', categoryHeaps.additionalTags, { relationshipData });
+        } else {
+            console.warn('No additional tags data available');
         }
         
         // Then refresh displayed fics
         chrome.storage.session.get(["storedFics"], function(result) {
-            debugger
             if (result.storedFics) {
                 displayFics(result.storedFics);
             }
@@ -65,6 +75,7 @@ window.addEventListener('load', function () {
             populateFilters('fandom', result.categoryHeaps.fandoms);
         }
         if (result.categoryHeaps.characters) {
+            debugger
             // Characters already have relationshipCount from content.js
             populateFilters('character', result.categoryHeaps.characters);
         }
@@ -188,9 +199,9 @@ function getSelectedFilters() {
             
             // For characters, we need to use the base name for comparison
             if (cat === "character") {
-                const baseName = extractCharacterName(value, true);
-                console.log(`Character filter: ${value} -> ${baseName}`);
-                selected.characters.push(baseName);
+                const originalTag = cb.getAttribute('data-original-tag');
+                console.log(`Character filter selected: ${originalTag}`);
+                selected.characters.push(originalTag);
             } else {
                 // For other categories, use the value as is
                 if (cat === "fandom") selected.fandoms.push(value);
@@ -210,22 +221,57 @@ function filterFicsConformToAll(selectedFilters, filterObject, ficsObject) {
     // Convert each selected filter array into sets of ficNames
     // Then intersect them
     let sets = [];
-    // Each category in filterObject: fandoms, characters, relationships, additionalTags
-    // filterObject structure: {fandoms: { "Arcane": { "ficName": ficObject, ...}, ...}, ...}
-    // debugger
-    for (let category of Object.keys(selectedFilters)) {
-        let values = selectedFilters[category];
-        if (values.length > 0 && filterObject[category]) {
-            let categorySet = new Set();
-            values.forEach(val => {
-                if (filterObject[category][val]) {
-                    Object.keys(filterObject[category][val]).forEach(ficName => {
-                        categorySet.add(ficName);
+    
+    // Handle each category separately since characters need special handling
+    if (selectedFilters.fandoms.length > 0 && filterObject.fandoms) {
+        let fandomSet = new Set();
+        selectedFilters.fandoms.forEach(fandom => {
+            if (filterObject.fandoms[fandom]) {
+                Object.keys(filterObject.fandoms[fandom]).forEach(ficName => {
+                    fandomSet.add(ficName);
+                });
+            }
+        });
+        sets.push(fandomSet);
+    }
+    
+    if (selectedFilters.characters.length > 0 && filterObject.characters) {
+        let characterSet = new Set();
+        selectedFilters.characters.forEach(charObj => {
+            // For each character in the filterObject, compare cleaned names
+            Object.entries(filterObject.characters).forEach(([charName, fics]) => {
+                if (extractCharacterName(charName, true) === extractCharacterName(charObj, true)) {
+                    Object.keys(fics).forEach(ficName => {
+                        characterSet.add(ficName);
                     });
                 }
             });
-            sets.push(categorySet);
-        }
+        });
+        sets.push(characterSet);
+    }
+    
+    if (selectedFilters.relationships.length > 0 && filterObject.relationships) {
+        let relationshipSet = new Set();
+        selectedFilters.relationships.forEach(rel => {
+            if (filterObject.relationships[rel]) {
+                Object.keys(filterObject.relationships[rel]).forEach(ficName => {
+                    relationshipSet.add(ficName);
+                });
+            }
+        });
+        sets.push(relationshipSet);
+    }
+    
+    if (selectedFilters.additionalTags.length > 0 && filterObject.additionalTags) {
+        let tagSet = new Set();
+        selectedFilters.additionalTags.forEach(tag => {
+            if (filterObject.additionalTags[tag]) {
+                Object.keys(filterObject.additionalTags[tag]).forEach(ficName => {
+                    tagSet.add(ficName);
+                });
+            }
+        });
+        sets.push(tagSet);
     }
 
     // Start intersection with all fics if no filters selected (then no restriction)
@@ -384,10 +430,11 @@ function extractCharacterName(text, forComparison = true) {
     return text;
 }
 
-function populateFilters(category, array, limit = 10) {
-    console.log('\n=== Populating Filters ===');
-    console.log('Category:', category);
-    console.log('Data received:', array);
+function populateFilters(category, array, options = {}) {
+    const { relationshipData, limit = 10 } = options;
+    if (category === "characters"){
+        console.log('Data received:', array);
+    }
     
     // Get the corresponding list element
     const filterList = document.querySelector(`dd.expandable.${category} > ul`);
@@ -399,22 +446,19 @@ function populateFilters(category, array, limit = 10) {
     // Clear existing filters
     filterList.innerHTML = '';
 
-    // Items are already sorted in content.js, just take the top N
-    const topItems = array.slice(0, limit);
-    console.log(`Top ${limit} items:`, topItems);
+    // For characters, array is already the top 10
+    // For other categories, take top N from the heap
+    const topItems = category === 'character' ? array : array.slice(0, limit);
 
     // Save current filter states before clearing
     const selectedFilters = Array.from(filterList.querySelectorAll('input[type="checkbox"]'))
         .filter(input => input.checked)
         .map(input => input.getAttribute('data-compare-value'));
-    
-    console.log('Previously selected filters:', selectedFilters);
 
     // Populate the filter list
     topItems.forEach((item, index) => {
         const listItem = document.createElement('li');
         const label = document.createElement('label');
-        const span = document.createElement('span');
         const indicator = document.createElement('span');
         const input = document.createElement('input');
 
@@ -426,17 +470,21 @@ function populateFilters(category, array, limit = 10) {
         let displayValue = item.tag;
         let compareValue = item.tag;
         
+        // Create spans for name and stats
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'name';
+        const countSpan = document.createElement('span');
+        countSpan.className = 'count';
+
         if (category === 'character') {
-            // Keep full name for display, but get base name for comparison
-            displayValue = extractCharacterName(item.tag, false); // Keep fandom info
-            compareValue = extractCharacterName(item.tag, true);  // Just base name
-            
-            console.log('Character processing:', {
-                original: item.tag,
-                display: displayValue,
-                compare: compareValue
-            });
+            // Show full character name (with fandom) in UI, but use cleaned name for comparison
+            displayValue = item.tag; // Keep original name with fandom for display
+            compareValue = extractCharacterName(item.tag, true);  // Clean name for comparison
         }
+        
+        // Set name and kudos count
+        nameSpan.textContent = displayValue;
+        countSpan.textContent = ` (${item.count})`;
         
         // Store both the full tag and comparison value
         input.value = compareValue;  // Use cleaned value for filtering
@@ -449,32 +497,16 @@ function populateFilters(category, array, limit = 10) {
         // Setup indicator
         indicator.className = "indicator";
         
-        // Create separate spans for name and stats
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'name';
-        nameSpan.textContent = displayValue;
-        
-        const statsSpan = document.createElement('span');
-        statsSpan.className = 'stats';
-        
-        // Format stats display - only show kudos count
-        statsSpan.textContent = ` (${item.count})`;
-        if (category === 'character' && typeof item.relationshipCount !== 'undefined') {
-            console.log('Stats:', {
-                character: displayValue,
-                kudos: item.count,
-                relationships: item.relationshipCount
-            });
-        }
-        
-        // Add spans to the main span
+        // Create container span and assemble elements
+        const span = document.createElement('span');
         span.appendChild(nameSpan);
-        span.appendChild(statsSpan);
+        span.appendChild(countSpan);
         
         // Assemble the elements
         label.appendChild(input);
         label.appendChild(indicator);
         label.appendChild(span);
+        
         listItem.appendChild(label);
         filterList.appendChild(listItem);
     });
